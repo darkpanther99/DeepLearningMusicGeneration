@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 def get_notes_from_chord(chord):
     if chord.startswith("<music21.chord.Chord "):
         chord = chord[len("<music21.chord.Chord "):]
+    elif chord.startswith("<music21.note.Rest "):
+        chord = chord[len("<music21.note.Rest "):]
     if chord.endswith(">"):
         chord = chord[:-1]
     chord = chord.replace(" ", ",")
@@ -22,9 +24,8 @@ def parse_midi(path):
     durations = []
 
     midi = converter.parse(path)
-    notes_to_parse = None
 
-    notes_to_parse = midi.flat.notes
+    notes_to_parse = midi.flat.notesAndRests
 
     #Lets make every note a chord!
     #Also save the durations
@@ -35,8 +36,34 @@ def parse_midi(path):
         elif isinstance(element, chord.Chord):
             chords.append(element)
             durations.append(element.duration)
+        elif isinstance(element, note.Rest):
+            chords.append(element)
+            durations.append(element.duration)
 
     return chords, durations
+
+def parse_midi_without_chords(path):
+    notes = []
+    durations = []
+
+    midi = converter.parse(path)
+
+    notes_to_parse = midi.flat.notesAndRests
+
+    # Lets make every chord a note!
+    # Also save the durations
+    for element in notes_to_parse:
+        if isinstance(element, note.Note):
+            notes.append(element)
+            durations.append(element.duration)
+        elif isinstance(element, chord.Chord):
+            notes.append(element.pitches[0]) #Root note is the first note in the chord
+            durations.append(element.duration)
+        elif isinstance(element, note.Rest):
+            notes.append(element)
+            durations.append(element.duration)
+
+    return notes, durations
 
 def create_mapper(chords):
     pitchnames = sorted(set(str(item) for item in chords))
@@ -97,12 +124,28 @@ def visualize_note_durations_together(path):
 
     print(f'Song {path} containts {max(encoded)} unique combinations.')
 
+def visualize_without_chords(path):
+    notes, durations = parse_midi_without_chords(path)
+    mapper = create_mapper(notes)
+    durationmapper = create_mapper(durations)
+    encodedsong = encode_using_mapper(notes, mapper)
+    encodeddurations = encode_using_mapper(durations, durationmapper)
+
+    plt.plot(encodedsong)
+    plt.show()
+    print(f'Song {path} containts {max(encodedsong)} unique notes.')
+    plt.plot(encodeddurations)
+    plt.show()
+    print(f'Song {path} containts {max(encodeddurations)} unique durations.')
 
 
-visualize_notes_durations_separately("The_Trooper.mid")
-visualize_notes_durations_separately("TrooperGuitar1.mid")
+visualize_notes_durations_separately("MIDI_data\The_Trooper.mid")
+visualize_notes_durations_separately("MIDI_data\TrooperGuitar1.mid")
 
-visualize_note_durations_together("The_Trooper.mid")
-visualize_note_durations_together("TrooperGuitar1.mid")
+visualize_note_durations_together("MIDI_data\The_Trooper.mid")
+visualize_note_durations_together("MIDI_data\TrooperGuitar1.mid")
+
+visualize_without_chords("MIDI_data\The_Trooper.mid")
+visualize_without_chords("MIDI_data\TrooperGuitar1.mid")
 
 
