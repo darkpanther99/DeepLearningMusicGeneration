@@ -139,13 +139,14 @@ def visualize_without_chords(path):
     print(f'Song {path} containts {max(encodeddurations)} unique durations.')
 
 
-visualize_notes_durations_separately("MIDI_data\The_Trooper.mid")
-visualize_notes_durations_separately("MIDI_data\TrooperGuitar1.mid")
+def visualize_everything():
+    visualize_notes_durations_separately("MIDI_data\The_Trooper.mid")
+    visualize_notes_durations_separately("MIDI_data\TrooperGuitar1.mid")
 
-visualize_note_durations_together("MIDI_data\The_Trooper.mid")
-visualize_note_durations_together("MIDI_data\TrooperGuitar1.mid")
+    visualize_note_durations_together("MIDI_data\The_Trooper.mid")
+    visualize_note_durations_together("MIDI_data\TrooperGuitar1.mid")
 
-visualize_without_chords("MIDI_data\The_Trooper.mid")
-visualize_without_chords("MIDI_data\TrooperGuitar1.mid")
+    visualize_without_chords("MIDI_data\The_Trooper.mid")
+    visualize_without_chords("MIDI_data\TrooperGuitar1.mid")
 
 
