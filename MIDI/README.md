@@ -4,4 +4,4 @@ In midivisualization.py, I parse MIDI songs, encode them into numbers, and plot 
 
 In output_to_midi.py, I convert numbers back into MIDI parts.
 
-In markov_chain_baseline.py, I construct a Markov-chain.
+In markov_chain_baseline.py, I construct a Markov-chain to generate MIDI music using machine learning. I parse my MIDI-s using the midisplitter.py file's functions, encode them into numbers, construct a Markov-chain from a list made of those numbers, and generate 200 numbers, using the Markov-chain. After that I decode the numbers into Chord objects, and construct the generated MIDI file.
