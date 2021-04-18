@@ -93,7 +93,7 @@ def generate_midi_parts_without_chords():
 
 
 def midipart_check_with_print(midiparts):
-    TARGET_INSTRUMENT = 'Electric Bass' #Choose one from IRON_MAIDEN_INSTRUMENTS
+    TARGET_INSTRUMENT = 'Electric Guitar' #Choose one from IRON_MAIDEN_INSTRUMENTS
 
     cnt=0
     cntnotempty = 0
@@ -126,3 +126,5 @@ def midipart_check_with_print(midiparts):
     print()
     print(f'I have extracted {len(midiparts)} MIDI parts, from which {cntnotempty2} are not empty.')
 
+if __name__=='__main__':
+    midipart_check_with_print(generate_midi_parts())
