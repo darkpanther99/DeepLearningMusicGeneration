@@ -4,3 +4,4 @@ numpy
 matplotlib
 tqdm
 music21
+mchmm
