@@ -10,3 +10,6 @@ I am using Python 3.8.
 The required packages can be seen in the <a href="https://github.com/darkpanther99/DeepLearningMusicGeneration/blob/main/requirements.txt">requirements.txt</a> file.  
 The requirements can be downloaded using pip, and they are only for the visualization, parsing and markov chain scripts.    
 To download waveforms, I am using the Spotify API made for developers. In order to use my waveform scripts, you have to register for the spotify for developers program, and use your private authentication keys.
+
+# Results
+You can check out the current results [here](https://darkpanther99.github.io).
