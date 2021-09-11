@@ -24,11 +24,7 @@ router.register('songs', views.SongViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('admin/', admin.site.urls),
-    path('mc', views.markov_chain),
-    path('seed', views.seed),
-    path('try_song', views.try_song),
-    path('rnd', views.get_random_song),
-    path('generate', views.menu),
-    path('listen', views.listen),
-    path('song/<slug:model>', views.model_song)
+    path('song', views.get_random_song),
+    path('song/<slug:model>', views.model_song),
+    path('generate/<slug:model>', views.execute_model)
 ]
