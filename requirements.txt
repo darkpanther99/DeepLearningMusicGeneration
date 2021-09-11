@@ -1,5 +1,5 @@
 spotipy
-librosa - you might need ffmpeg as well to load mp3 files
+librosa
 numpy
 matplotlib
 tqdm

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Song</title>
+</head>
+<body>
+{{ title }}
+<br>
+{{ author }}
+<br>
+<audio controls>
+    {% load static %}
+    <source src="{% static path %}" type="audio/wav">
+</audio>
+</body>
+</html>
