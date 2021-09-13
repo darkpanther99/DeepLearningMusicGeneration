@@ -5,6 +5,7 @@ from rest_framework import viewsets
 from MLSongs.serializers import SongSerializer
 from MLSongs.ml_agents.markov_chain import MarkovModel
 from MLSongs.ml_agents.LSTM import LSTMModel
+from MLSongs.ml_agents.GPT_2 import Music_GPT_2
 import random
 import threading
 
@@ -32,6 +33,8 @@ def model_song(request, model):
         ML_model_name = "MarkovChain"
     elif "lstm" in model.lower():
         ML_model_name = "LSTMModel"
+    elif "gpt" in model.lower():
+        ML_model_name = "GPT-2Model"
 
 
     mc_author = MLModel.objects.filter(name=ML_model_name).first()
@@ -63,7 +66,19 @@ def execute_model(request, model, count):
         t.start()
         return HttpResponse("LSTM is working in the background!")
 
+    if "gpt" in model.lower():
+        t = threading.Thread(target=create_gpt)
+        t.start()
+        return HttpResponse("GPT-2 postprocessor is working in the background!")
+
     return HttpResponse("OK")
+
+def create_gpt():
+    gpt = Music_GPT_2()
+    data = gpt.load_data()
+    clean_data = gpt.preprocess_data(data)
+    gpt.predict(clean_data, -1)
+
 
 def create_markov(count):
     mc = MarkovModel()
