@@ -4,7 +4,8 @@ from MLSongs.ml_agents.ml_model_base import MLModelBase
 from MLSongs.ml_agents.utilities import parse_midi_notes_and_durations,\
     get_chords_and_durations_of_instrument, create_mapper, encode_using_mapper, get_key_from_value,\
     create_midi_with_durations, midi_to_wav, change_midi_instrument, combine_chords_with_durations, most_frequent,\
-    parse_everything_together
+    parse_everything_together, create_midi_with_embedded_durations
+from MLSongs.ml_agents.postprocessing_utils import generate_notes
 from collections import Counter
 import numpy as np
 import mchmm as mc
@@ -16,12 +17,11 @@ from tensorflow.keras.models import load_model
 class LSTMModel(MLModelBase):
 
     def __init__(self):
+        super(LSTMModel, self).__init__()
         self.target_instrument_str = 'Electric Guitar'
         self.target_instrument = instrument.ElectricGuitar()
         self.slice_len = 10
-        super(LSTMModel, self).__init__()
-        data = self.load_data()
-        input = self.preprocess_data(data)
+
 
     def load_data(self):
         midiparts = parse_midi_notes_and_durations(LOCAL_ABSOLUTE_PATH)
@@ -107,8 +107,40 @@ class LSTMModel(MLModelBase):
         return input
 
     def build_model(self):
-        pass
+        mc_author = MLModel.objects.filter(name="LSTMModel").first()
 
-    def predict(self, input):
-        startidx = np.random.randint(0, len(input) - 1)
-        starting_slice = input[startidx]
+        if not mc_author:
+            mc_author = MLModel(name="LSTMModel", path="guitarLSTM1.h5")
+            mc_author.save()
+
+        self.model = load_model(mc_author.path)
+
+    def predict(self, input, count, temp):
+        #startidx = np.random.randint(0, len(input) - 1)
+        #starting_slice = input[startidx]
+        songs_in_db_cnt = len(Song.objects.all())
+        to_generate = count
+
+        for j in range(songs_in_db_cnt, songs_in_db_cnt + to_generate):
+
+            generated_output = generate_notes(self.model, input, self.mapper, self.mapper_list, temp=temp)
+
+            midi_path = f'LSTM_OUTPUT{j}.mid'
+            create_midi_with_embedded_durations(generated_output, target_instrument=instrument.ElectricGuitar(), filename=midi_path)
+
+            change_midi_instrument(midi_path, self.target_instrument)
+            midi_to_wav(midi_path, f'static/songs/LSTM_OUTPUT{j}.wav', True)
+
+            self.save_song_to_db(f'LSTM_OUTPUT{j}.wav')
+
+    def save_song_to_db(self, song_path):
+        # Since I only have 1 LSTMModel record, that will be the MLModel.
+        mc_author = MLModel.objects.filter(name="LSTMModel").first()
+
+        if not mc_author:
+            mc_author = MLModel(name="LSTMModel", path = "guitarLSTM1.h5")
+            mc_author.save()
+
+        # The song's title is the path without the wav extension.
+        s = Song(title=song_path[:-4], author=mc_author, path=song_path)
+        s.save()

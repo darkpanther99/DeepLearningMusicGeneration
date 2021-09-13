@@ -17,13 +17,6 @@ class MarkovModel(MLModelBase):
         self.target_instrument_str = 'Electric Guitar'
         self.target_instrument = instrument.ElectricGuitar()
 
-        data = self.load_data()
-        chords, durations = self.preprocess_data(data)
-        print("Building model")
-        self.build_model(chords, durations)
-        print("Generating music")
-        self.generate_music(chords, durations)
-
     def load_data(self):
         midiparts = parse_midi_notes_and_durations(LOCAL_ABSOLUTE_PATH)
         return midiparts
@@ -81,9 +74,9 @@ class MarkovModel(MLModelBase):
         with open('durations_markov_2', 'wb') as outp:  # Overwrites any existing file.
             pickle.dump(self.durationmc, outp, pickle.HIGHEST_PROTOCOL)
 
-    def generate_music(self, encoded_chord_string, encoded_duration_string):
+    def generate_music(self, encoded_chord_string, encoded_duration_string, count):
         songs_in_db_cnt = len(Song.objects.all())
-        to_generate = 10
+        to_generate = count
 
         for j in range(songs_in_db_cnt, songs_in_db_cnt + to_generate):
             chord_states = None
