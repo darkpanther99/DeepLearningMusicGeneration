@@ -1,17 +1,13 @@
 from DjangoApp.secretsconfig import LOCAL_ABSOLUTE_PATH
 from MLSongs.database.models import Song, MLModel
 from MLSongs.ml_agents.ml_model_base import MLModelBase
-from MLSongs.ml_agents.utilities import parse_midi_notes_and_durations,\
-    get_chords_and_durations_of_instrument, create_mapper, encode_using_mapper, get_key_from_value,\
-    create_midi_with_durations, midi_to_wav, change_midi_instrument, combine_chords_with_durations, most_frequent,\
-    parse_everything_together, create_midi_with_embedded_durations
-from MLSongs.ml_agents.postprocessing_utils import generate_notes
+from MLSongs.ml_agents.utilities import get_key_from_value,\
+    combine_chords_with_durations, most_frequent
+from MLSongs.ml_agents.postprocessing_utils import generate_notes, create_midi_with_embedded_durations, create_midi_with_durations, midi_to_wav, change_midi_instrument
+from MLSongs.ml_agents.preprocessing_utils import parse_midi_notes_and_durations, create_mapper, encode_using_mapper, get_chords_and_durations_of_instrument, parse_everything_together
 from collections import Counter
 import numpy as np
-import mchmm as mc
-import random
 from music21 import instrument
-import pickle
 from tensorflow.keras.models import load_model
 
 class LSTMModel(MLModelBase):

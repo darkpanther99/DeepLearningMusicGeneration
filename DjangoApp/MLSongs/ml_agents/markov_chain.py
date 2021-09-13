@@ -1,9 +1,9 @@
 from DjangoApp.secretsconfig import LOCAL_ABSOLUTE_PATH
 from MLSongs.database.models import Song, MLModel
 from MLSongs.ml_agents.ml_model_base import MLModelBase
-from MLSongs.ml_agents.utilities import parse_midi_notes_and_durations,\
-    get_chords_and_durations_of_instrument, create_mapper, encode_using_mapper, get_key_from_value,\
-    create_midi_with_durations, midi_to_wav, change_midi_instrument
+from MLSongs.ml_agents.utilities import get_key_from_value
+from MLSongs.ml_agents.postprocessing_utils import create_midi_with_durations, midi_to_wav, change_midi_instrument
+from MLSongs.ml_agents.preprocessing_utils import parse_midi_notes_and_durations, create_mapper, encode_using_mapper, get_chords_and_durations_of_instrument
 import numpy as np
 import mchmm as mc
 import random
