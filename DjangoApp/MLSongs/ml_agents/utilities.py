@@ -12,7 +12,6 @@ class MidiPart:
 def get_key_from_value(value, dict):
     return list(dict.keys())[list(dict.values()).index(value)]
 
-
 def most_frequent(paramlist):
     # https://www.geeksforgeeks.org/python-find-most-frequent-element-in-a-list/
     counter = 0

@@ -103,13 +103,13 @@ class LSTMModel(MLModelBase):
         return input
 
     def build_model(self):
-        mc_author = MLModel.objects.filter(name="LSTMModel").first()
+        ml_author = MLModel.objects.filter(name=self.db_name).first()
 
-        if not mc_author:
-            mc_author = MLModel(name="LSTMModel", path="guitarLSTM1.h5")
-            mc_author.save()
+        if not ml_author:
+            ml_author = MLModel(name=self.db_name, path=self.path)
+            ml_author.save()
 
-        self.model = load_model(mc_author.path)
+        self.model = load_model(ml_author.path)
 
     def predict(self, input, count, temp):
         #startidx = np.random.randint(0, len(input) - 1)
@@ -134,7 +134,7 @@ class LSTMModel(MLModelBase):
         mc_author = MLModel.objects.filter(name="LSTMModel").first()
 
         if not mc_author:
-            mc_author = MLModel(name="LSTMModel", path = "guitarLSTM1.h5")
+            mc_author = MLModel(name="LSTMModel", path = "ml_models/guitarLSTM1.h5")
             mc_author.save()
 
         # The song's title is the path without the wav extension.

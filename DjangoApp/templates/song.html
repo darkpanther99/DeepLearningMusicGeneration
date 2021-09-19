@@ -3,8 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <title>Song</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 <body>
+<nav>
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/help">Help</a></li>
+    </ul>
+</nav>
 {{ title }}
 <br>
 {{ author }}

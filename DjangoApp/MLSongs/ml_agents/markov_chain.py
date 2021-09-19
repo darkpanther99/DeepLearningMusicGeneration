@@ -61,17 +61,17 @@ class MarkovModel(MLModelBase):
         return encoded_chord_string, encoded_duration_string
 
     def build_model(self, encoded_chord_string, encoded_duration_string):
-        with open('chords_markov', 'rb') as outp:  # Overwrites any existing file.
+        with open('ml_models/chords_markov', 'rb') as outp:  # Overwrites any existing file.
             self.chordsmc = pickle.load(outp)
-        with open('durations_markov', 'rb') as outp:  # Overwrites any existing file.
+        with open('ml_models/durations_markov', 'rb') as outp:  # Overwrites any existing file.
             self.durationmc = pickle.load(outp)
 
     def build_and_save_model(self, encoded_chord_string, encoded_duration_string):
         self.chordsmc = mc.MarkovChain().from_data(encoded_chord_string)
-        with open('chords_markov_2', 'wb') as outp:  # Overwrites any existing file.
+        with open('ml_models/chords_markov_2', 'wb') as outp:  # Overwrites any existing file.
             pickle.dump(self.chordsmc, outp, pickle.HIGHEST_PROTOCOL)
         self.durationmc = mc.MarkovChain().from_data(encoded_duration_string)
-        with open('durations_markov_2', 'wb') as outp:  # Overwrites any existing file.
+        with open('ml_models/durations_markov_2', 'wb') as outp:  # Overwrites any existing file.
             pickle.dump(self.durationmc, outp, pickle.HIGHEST_PROTOCOL)
 
     def generate_music(self, encoded_chord_string, encoded_duration_string, count):

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Help</title>
+</head>
+<body>
+<h2>Random song</h2>
+To listen to a random song, click <a href="/">here</a>, or use the normal url of the webpage wihtout any parameters.
+<h2>Specific song</h2>
+To listen to a specific song from a model, use the url of the webpage with parameters /song/{model_name}/{instrument}.
+<br>
+<label for="models">Choose a model and an instrument:</label>
+
+<select name="models" id="models">
+  <option value="lstm">LSTM</option>
+  <option value="markov">Markov Chain</option>
+  <option value="gpt">GPT-2</option>
+</select>
+
+<select name="instruments" id="instruments">
+  <option value="guitar">Guitar</option>
+  <option value="multi">Multi instrument</option>
+</select>
+
+<button type="button" onclick="btn_click()">Go</button>
+
+<h2>To generate a song</h2>
+To generate a song from a model, use the url of the webpage with parameters /generate/{model_name}/{instrument}.<br>
+Number of songs is an optional last parameter: /generate/{model_name}/{instrument}/{count} will generate {count} songs.
+<br>
+<label for="models">Choose a model and an instrument:</label>
+
+<select name="models" id="models2">
+  <option value="lstm">LSTM</option>
+  <option value="markov">Markov Chain</option>
+  <option value="gpt">GPT-2</option>
+</select>
+
+<select name="instruments" id="instruments2">
+  <option value="guitar">Guitar</option>
+  <option value="multi">Multi instrument</option>
+</select>
+
+<button type="button" onclick="btn_click2()">Go</button>
+{% load static %}
+<script src = "{% static 'script.js' %}"></script>
+</body>
+</html>

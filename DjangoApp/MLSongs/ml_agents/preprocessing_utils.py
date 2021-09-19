@@ -1,7 +1,20 @@
+from collections import Counter
+
 from MLSongs.ml_agents.utilities import MidiPart
 from music21 import converter, instrument, note, chord, stream
 from tqdm import tqdm
 import os
+
+from MLSongs.ml_agents.utilities import most_frequent
+
+def encode_notes(chords, mapper):
+    encoded_data = []
+
+    for c in chords:
+        encoded = encode_using_mapper(c, mapper)
+        encoded_data.append(encoded)
+
+    return encoded_data
 
 def get_chords_and_durations_of_instrument(midiparts, target_instrument):
     allchords = []
@@ -20,6 +33,66 @@ def create_mapper(chords):
 
     return mapper
 
+def create_mapper_data(data):
+    mapper_data = []
+    for i in data:
+        for j in i:
+            mapper_data.append(j)
+
+    return mapper_data
+
+def clear_encoded_data(encoded_data, mapper):
+    restkeysvalues = []
+    for j in mapper.keys():
+        if ('rest' in j):
+            restkeysvalues.append(mapper[j])
+
+    cleared_encoded_data = []
+
+    for i in range(len(encoded_data)):
+        if most_frequent(encoded_data[i]) not in restkeysvalues:
+            cleared_encoded_data.append(encoded_data[i])
+
+    return cleared_encoded_data
+
+def filter_outliers(input, output, outlier_constant):
+
+    outputcnt = Counter(output)
+    outliers = []
+
+    for i in outputcnt.keys():
+        if outputcnt[i] < outlier_constant:
+            outliers.append(i)
+
+    assert (len(input) == len(output))
+
+    newinput = []
+    newoutput = []
+
+    for i in range(len(output)):
+        if (output[i] not in outliers):
+            newinput.append(input[i])
+            newoutput.append(output[i])
+
+    input = newinput
+    output = newoutput
+
+    assert (len(input) == len(output))
+
+    mapper_list = []  # Idx of the mapper list is the new value, the element is the old value.
+    new_output_elements = set(output)
+
+    for i in new_output_elements:
+        mapper_list.append(i)
+
+    newoutput = []
+
+    for i in output:
+        newoutput.append(mapper_list.index(i))
+
+    output = newoutput
+
+    return input, output, mapper_list
 
 def make_slices(data, slice_length):
     for song in tqdm(data):

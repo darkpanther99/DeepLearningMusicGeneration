@@ -22,9 +22,13 @@ router = routers.DefaultRouter()
 router.register('songs', views.SongViewSet)
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path('', views.get_random_song),
+    path('rest', include(router.urls)),
     path('admin/', admin.site.urls),
     path('song', views.get_random_song),
-    path('song/<slug:model>', views.model_song),
-    path('generate/<slug:model>/<int:count>', views.execute_model)
+    path('debug', views.debug),
+    path('help', views.help),
+    path('song/<slug:model>/<slug:instrument>', views.model_song),
+    path('generate/<slug:model>/<slug:instrument>', views.execute_model_once),
+    path('generate/<slug:model>/<slug:instrument>/<int:count>', views.execute_model)
 ]
