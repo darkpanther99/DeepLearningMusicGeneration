@@ -1,6 +1,5 @@
 from django.http import HttpResponse
 from django.shortcuts import render
-from MLSongs.database.models import MLModel, Song
 from rest_framework import viewsets
 from MLSongs.serializers import SongSerializer
 from MLSongs.ml_agents.markov_chain import MarkovModel
@@ -8,19 +7,19 @@ from MLSongs.ml_agents.LSTM import LSTMModel
 from MLSongs.ml_agents.GPT_2 import Music_GPT_2
 import random
 import threading
-
 from MLSongs.ml_agents.multi_instrument_LSTM import MultiInstrumentLSTM
+from MLSongs.database.db_services import get_model, get_songs_by_author, get_all_songs, create_empty_song
 
 
 class SongViewSet(viewsets.ModelViewSet):
-    queryset = Song.objects.all()
+    queryset = get_all_songs()
     serializer_class = SongSerializer
 
 def index(request):
     return render(request, 'index.html')
 
 def get_random_song(request):
-    songs = Song.objects.all()
+    songs = get_all_songs()
     chosen_song = random.choice(songs)
     variables = {
         'title': chosen_song.title,
@@ -32,11 +31,14 @@ def get_random_song(request):
 def model_song(request, model, instrument):
     print(model)
 
-    chosen_song = Song(author = MLModel())
+    chosen_song = create_empty_song()
     ML_model_name = ""
 
     if "markov" in model.lower():
-        ML_model_name = "MarkovChain"
+        if "guitar" in instrument.lower():
+            ML_model_name = "MarkovGuitar"
+        elif "bass" in instrument.lower():
+            ML_model_name = "MarkovBass"
     elif "lstm" in model.lower():
         if "guitar" in instrument.lower():
             ML_model_name = "LSTMModel"
@@ -45,13 +47,11 @@ def model_song(request, model, instrument):
     elif "gpt" in model.lower():
         ML_model_name = "GPT-2Model"
 
-
-
-    mc_author = MLModel.objects.filter(name=ML_model_name).first()
-    if not mc_author:
+    ml_author = get_model(ML_model_name)
+    if not ml_author:
         return HttpResponse(f"No ML model found for {ML_model_name}. Try executing it, or a different model.")
     try:
-        chosen_song = random.choice(Song.objects.filter(author=mc_author).all())
+        chosen_song = random.choice(get_songs_by_author(ML_model_name))
     except IndexError:
         return HttpResponse(f"No generated songs found for {ML_model_name}. Execute the model ang generate some!")
 
@@ -67,7 +67,7 @@ def execute_model(request, model, instrument, count):
     print(model)
 
     if "markov" in model.lower():
-        t = threading.Thread(target=create_markov, args=(count,))
+        t = threading.Thread(target=create_markov, args=(count, instrument))
         t.start()
         return HttpResponse("Markov Model is working in the background!")
 
@@ -104,12 +104,13 @@ def create_gpt():
     gpt.predict(clean_data, -1)
 
 
-def create_markov(count):
-    mc = MarkovModel()
+def create_markov(count, instrument_str):
+    mc = MarkovModel(instrument_str)
     data = mc.load_data()
     chords, durations = mc.preprocess_data(data)
     print("Building model")
     mc.build_model(chords, durations)
+    #mc.build_and_save_model(chords, durations)
     print("Generating music")
     mc.generate_music(chords, durations, count)
 
@@ -127,6 +128,9 @@ def seed(request):
     return HttpResponse("Success!")
 
 def debug(request):
+    from MLSongs.database. models import MLModel, Song
+    for i in MLModel.objects.all():
+        print(i.name, i.path)
     return HttpResponse("Debug script running!")
 
 

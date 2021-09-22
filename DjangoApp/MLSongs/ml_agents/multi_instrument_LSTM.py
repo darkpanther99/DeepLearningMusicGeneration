@@ -1,13 +1,10 @@
 from MLSongs.ml_agents.ml_model_base import MLModelBase
 from DjangoApp.secretsconfig import LOCAL_ABSOLUTE_PATH
-from collections import Counter
 import numpy as np
 from music21 import instrument
 from music21.stream import Score
-from tensorflow.keras.models import load_model
 from MLSongs.ml_agents.preprocessing_utils import parse_midi_notes_and_durations, get_chords_and_durations_of_instrument
 
-from MLSongs.database.models import MLModel, Song
 from MLSongs.ml_agents.postprocessing_utils import generate_multi_instrument_notes, \
     create_midipart_with_durations, midi_to_wav
 from MLSongs.ml_agents.preprocessing_utils import create_mapper_data, create_mapper, encode_using_mapper, \
@@ -15,13 +12,16 @@ from MLSongs.ml_agents.preprocessing_utils import create_mapper_data, create_map
 from MLSongs.ml_agents.preprocessing_utils import encode_notes
 from MLSongs.ml_agents.postprocessing_utils import create_drum_part_with_durations
 
+from MLSongs.database.db_services import get_songs_by_author
+
 
 class MultiInstrumentLSTM(MLModelBase):
 
     def __init__(self):
-        super(MultiInstrumentLSTM, self).__init__('LSTMMultiInstrumentModel', "ml_models/multiinstrumentmodel1.h5")
+        super(MultiInstrumentLSTM, self).__init__('LSTMMultiInstrumentModel', "ml_models/LSTM_multi.h5")
         self.target_instruments_str = ['Electric Guitar', 'Electric Bass', 'Piano']
         self.target_instruments = [instrument.ElectricGuitar(), instrument.ElectricBass(), instrument.Percussion()]
+        self.instrument_name = "guitar+bass"
         self.slice_len = 20
 
     def load_data(self):
@@ -83,7 +83,7 @@ class MultiInstrumentLSTM(MLModelBase):
         starting_slice_bass = (np.asarray(encode_using_mapper(self.bass_chords[0], self.bass_mapper)) / len(self.bass_mapper))[:20]
         starting_slice_drum = (np.asarray(encode_using_mapper(self.drum_chords[0], self.drum_mapper)) / len(self.drum_mapper))[:20]
 
-        songs_in_db_cnt = len(Song.objects.all())
+        songs_in_db_cnt = len(get_songs_by_author(self.db_name))
         to_generate = count
 
         for j in range(songs_in_db_cnt, songs_in_db_cnt + to_generate):
@@ -111,10 +111,10 @@ class MultiInstrumentLSTM(MLModelBase):
             full_midi.insert(0, bass_part)
             #full_midi.insert(0, drum_part)
 
-            midi_path = f'LSTM_MultiInstrument_OUTPUT{j}.mid'
+            midi_path = f'LSTM_{self.instrument_name}_{j}.mid'
 
             full_midi.write('midi', fp=midi_path)
-            midi_to_wav(midi_path, f'static/songs/LSTM_MultiInstrument_OUTPUT{j}.wav', True)
+            midi_to_wav(midi_path, f'static/songs/LSTM_{self.instrument_name}_{j}.wav', True)
 
-            self.save_song_to_db(f'LSTM_MultiInstrument_OUTPUT{j}.wav')
+            self.save_song_to_db(f'LSTM_{self.instrument_name}_{j}.wav')
 

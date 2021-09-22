@@ -1,6 +1,5 @@
 from keras.models import load_model
-from MLSongs.database.models import MLModel, Song
-
+from MLSongs.database.db_services import get_model_with_insert, save_song
 
 class MLModelBase:
 
@@ -17,25 +16,13 @@ class MLModelBase:
         pass
 
     def build_model(self):
-        ml_author = MLModel.objects.filter(name=self.db_name).first()
-
-        if not ml_author:
-            ml_author = MLModel(name=self.db_name, path=self.path)
-            ml_author.save()
-
+        ml_author = get_model_with_insert(self.db_name, self.path)
         self.model = load_model(ml_author.path)
 
     def save_song_to_db(self, song_path):
-        # Since I only have 1 LSTMModel record, that will be the MLModel.
-        ml_author = MLModel.objects.filter(name=self.db_name).first()
-
-        if not ml_author:
-            ml_author = MLModel(name=self.db_name, path = self.path)
-            ml_author.save()
-
+        ml_author = get_model_with_insert(self.db_name, self.path)
         # The song's title is the path without the wav extension.
-        s = Song(title=song_path[:-4], author=ml_author, path=song_path)
-        s.save()
+        save_song(song_path[:-4], ml_author, song_path)
 
     def predict(self):
         pass

@@ -1,5 +1,4 @@
 from DjangoApp.secretsconfig import LOCAL_ABSOLUTE_PATH
-from MLSongs.database.models import Song, MLModel
 from MLSongs.ml_agents.ml_model_base import MLModelBase
 from MLSongs.ml_agents.utilities import get_key_from_value
 from MLSongs.ml_agents.postprocessing_utils import create_midi_with_durations, midi_to_wav, change_midi_instrument
@@ -9,13 +8,25 @@ import mchmm as mc
 import random
 from music21 import instrument
 import pickle
+from MLSongs.database.db_services import get_songs_by_author
+
 
 class MarkovModel(MLModelBase):
 
-    def __init__(self):
-        super(MarkovModel, self).__init__()
-        self.target_instrument_str = 'Electric Guitar'
-        self.target_instrument = instrument.ElectricGuitar()
+    def __init__(self, instrument_str):
+        if 'bass' in instrument_str.lower():
+            self.target_instrument_str = 'Electric Bass'
+            self.target_instrument = instrument.ElectricBass()
+            self.instrument_name = 'bass'
+            db_name = "MarkovBass"
+        if 'guitar' in instrument_str.lower():
+            self.target_instrument_str = 'Electric Guitar'
+            self.target_instrument = instrument.ElectricGuitar()
+            self.instrument_name = 'guitar'
+            db_name = "MarkovGuitar"
+
+        super(MarkovModel, self).__init__(db_name, "")
+
 
     def load_data(self):
         midiparts = parse_midi_notes_and_durations(LOCAL_ABSOLUTE_PATH)
@@ -61,21 +72,21 @@ class MarkovModel(MLModelBase):
         return encoded_chord_string, encoded_duration_string
 
     def build_model(self, encoded_chord_string, encoded_duration_string):
-        with open('ml_models/chords_markov', 'rb') as outp:  # Overwrites any existing file.
+        with open(f'ml_models/markov_{self.instrument_name}_chords', 'rb') as outp:
             self.chordsmc = pickle.load(outp)
-        with open('ml_models/durations_markov', 'rb') as outp:  # Overwrites any existing file.
+        with open(f'ml_models/markov_{self.instrument_name}_durations', 'rb') as outp:
             self.durationmc = pickle.load(outp)
 
     def build_and_save_model(self, encoded_chord_string, encoded_duration_string):
         self.chordsmc = mc.MarkovChain().from_data(encoded_chord_string)
-        with open('ml_models/chords_markov_2', 'wb') as outp:  # Overwrites any existing file.
+        with open('ml_models/markov_bass_chords', 'wb') as outp:  # Overwrites any existing file.
             pickle.dump(self.chordsmc, outp, pickle.HIGHEST_PROTOCOL)
         self.durationmc = mc.MarkovChain().from_data(encoded_duration_string)
-        with open('ml_models/durations_markov_2', 'wb') as outp:  # Overwrites any existing file.
+        with open('ml_models/markov_bass_durations', 'wb') as outp:  # Overwrites any existing file.
             pickle.dump(self.durationmc, outp, pickle.HIGHEST_PROTOCOL)
 
     def generate_music(self, encoded_chord_string, encoded_duration_string, count):
-        songs_in_db_cnt = len(Song.objects.all())
+        songs_in_db_cnt = len(get_songs_by_author(self.db_name))
         to_generate = count
 
         for j in range(songs_in_db_cnt, songs_in_db_cnt + to_generate):
@@ -107,19 +118,13 @@ class MarkovModel(MLModelBase):
                 duration = get_key_from_value(int(i), self.duration_mapper)
                 musicdurations.append(duration)
 
-            midi_path = f'Maiden_Guitar_{j}.mid'
+            midi_path = f'Markov_{self.instrument_name}_{j}.mid'
             create_midi_with_durations(music, musicdurations, self.target_instrument, midi_path)
             change_midi_instrument(midi_path, self.target_instrument)
-            midi_to_wav(midi_path, f'static/songs/Maiden_Guitar_{j}.wav', True)
+            midi_to_wav(midi_path, f'static/songs/Markov_{self.instrument_name}_{j}.wav', True)
 
-            self.save_song_to_db(f'Maiden_Guitar_{j}.wav')
+            self.save_song_to_db(f'Markov_{self.instrument_name}_{j}.wav')
 
-    def save_song_to_db(self, song_path):
-        #Since I only have 1 MarkovChain record, that will be the MLModel.
-        mc_author = MLModel.objects.filter(name="MarkovChain").first()
-        #The song's title is the path without the wav extension.
-        s = Song(title=song_path[:-4], author=mc_author, path=song_path)
-        s.save()
 
 if __name__ == '__main__':
     MarkovModel()
