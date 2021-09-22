@@ -77,7 +77,7 @@ def execute_model(request, model, instrument, count):
             t.start()
             return HttpResponse("LSTM is working in the background!")
         if "multi" in instrument.lower():
-            t = threading.Thread(target=create_multi_lstm)
+            t = threading.Thread(target=create_multi_lstm, args=(count,))
             t.start()
             return HttpResponse("LSTM is working in the background!")
 
@@ -90,12 +90,7 @@ def execute_model(request, model, instrument, count):
 
     return HttpResponse("OK")
 
-def create_multi_lstm():
-    multi_lstm = MultiInstrumentLSTM()
-    data = multi_lstm.load_data()
-    guitar_input, durations_input, bass_input, drum_input = multi_lstm.preprocess_data(data)
-    multi_lstm.build_model()
-    multi_lstm.predict(3, 0.8)
+
 
 def create_gpt():
     gpt = Music_GPT_2()
@@ -103,6 +98,12 @@ def create_gpt():
     clean_data = gpt.preprocess_data(data)
     gpt.predict(clean_data, -1)
 
+def create_multi_lstm(count):
+    multi_lstm = MultiInstrumentLSTM()
+    data = multi_lstm.load_data()
+    guitar_input, durations_input, bass_input, drum_input = multi_lstm.preprocess_data(data)
+    multi_lstm.build_model()
+    multi_lstm.predict(data, count, 0.8)
 
 def create_markov(count, instrument_str):
     mc = MarkovModel(instrument_str)
@@ -121,11 +122,6 @@ def create_LSTM(count):
     lstm.build_model()
     lstm.predict(input, count, 0.8)
 
-def seed(request):
-    #m = MLModel(name='MarkovChain')
-    #m.save()
-
-    return HttpResponse("Success!")
 
 def debug(request):
     from MLSongs.database. models import MLModel, Song

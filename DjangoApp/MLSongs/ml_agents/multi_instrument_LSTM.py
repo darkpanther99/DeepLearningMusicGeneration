@@ -1,7 +1,9 @@
+import random
+
 from MLSongs.ml_agents.ml_model_base import MLModelBase
 from DjangoApp.secretsconfig import LOCAL_ABSOLUTE_PATH
 import numpy as np
-from music21 import instrument
+from music21 import instrument, note
 from music21.stream import Score
 from MLSongs.ml_agents.preprocessing_utils import parse_midi_notes_and_durations, get_chords_and_durations_of_instrument
 
@@ -29,25 +31,19 @@ class MultiInstrumentLSTM(MLModelBase):
         return midiparts
 
     def preprocess_data(self, data):
-        guitar_chords, guitar_durations = get_chords_and_durations_of_instrument(data, self.target_instruments_str[0])
-        bass_chords, bass_durations = get_chords_and_durations_of_instrument(data, self.target_instruments_str[1])
-        drum_chords, drum_durations = get_chords_and_durations_of_instrument(data, self.target_instruments_str[2])
+        guitar_chords_raw, guitar_durations_raw = get_chords_and_durations_of_instrument(data, self.target_instruments_str[0])
+        bass_chords_raw, bass_durations = get_chords_and_durations_of_instrument(data, self.target_instruments_str[1])
+        drum_chords_raw, drum_durations = get_chords_and_durations_of_instrument(data, self.target_instruments_str[2])
 
-        self.guitar_chords = guitar_chords
-        self.durations = guitar_durations
-        self.bass_chords = bass_chords
-        self.drum_chords = drum_chords
+        self.guitar_mapper = create_mapper(create_mapper_data(guitar_chords_raw))
+        self.guitar_durations_mapper = create_mapper(create_mapper_data(guitar_durations_raw))
+        self.bass_mapper = create_mapper(create_mapper_data(bass_chords_raw))
+        self.drum_mapper = create_mapper(create_mapper_data(drum_chords_raw))
 
-
-        self.guitar_mapper = create_mapper(create_mapper_data(guitar_chords))
-        self.guitar_durations_mapper = create_mapper(create_mapper_data(guitar_durations))
-        self.bass_mapper = create_mapper(create_mapper_data(bass_chords))
-        self.drum_mapper = create_mapper(create_mapper_data(drum_chords))
-
-        guitar_chords = encode_notes(guitar_chords, self.guitar_mapper)
-        guitar_durations = encode_notes(guitar_durations, self.guitar_durations_mapper)
-        bass_chords = encode_notes(bass_chords, self.bass_mapper)
-        drum_chords = encode_notes(drum_chords, self.drum_mapper)
+        guitar_chords = encode_notes(guitar_chords_raw, self.guitar_mapper)
+        guitar_durations = encode_notes(guitar_durations_raw, self.guitar_durations_mapper)
+        bass_chords = encode_notes(bass_chords_raw, self.bass_mapper)
+        drum_chords = encode_notes(drum_chords_raw, self.drum_mapper)
 
         guitar_chords = clear_encoded_data(guitar_chords, self.guitar_mapper)
         guitar_durations = clear_encoded_data(guitar_durations, self.guitar_durations_mapper)
@@ -70,18 +66,46 @@ class MultiInstrumentLSTM(MLModelBase):
         bass_input = np.reshape(np.asarray(bass_input), (len(bass_input), self.slice_len, 1))
         drum_input = np.reshape(np.asarray(drum_input), (len(drum_input), self.slice_len, 1))
 
-        return guitar_input, durations_input, bass_input, drum_input
+        return guitar_chords_raw, guitar_durations_raw, bass_chords_raw, drum_chords_raw
 
-    def predict(self, count, temp):
+    def predict(self, data, count, temp):
         #startidx = np.random.randint(0, len(input) - 1)
         #starting_slice = input[startidx]
         #TODO ne az első daltól lehessen csak kezdeni, hanem random daltól
         #Keres egy random dalta mappában, azt beolvassa, első sliceot átalakítja, normálja, stb, és használja
-        starting_slice_notes = (np.asarray(encode_using_mapper(self.guitar_chords[0], self.guitar_mapper)) / len(self.guitar_mapper))[:20]
-        starting_slice_durations = (np.asarray(encode_using_mapper(self.durations[0], self.guitar_durations_mapper)) / len(
+
+        songs = list(set([i.song for i in data]))
+
+        random_song = random.choice(songs)
+        slice_by_instrument = dict(zip(self.target_instruments_str, [[] for i in self.target_instruments_str]))
+        for j in self.target_instruments_str:
+            for i in data:
+                if i.song == random_song and i.instrument == j:
+                    slice_by_instrument[j].append(i)
+
+        slice_by_instrument_without_rests = dict(zip(self.target_instruments_str, [[] for i in self.target_instruments_str]))
+
+        for i in slice_by_instrument.keys():
+            for song in slice_by_instrument[i]:
+                if not isinstance(song.chords[0], note.Rest):
+                    slice_by_instrument_without_rests[i].append(song)
+            if len(slice_by_instrument_without_rests[i]) != 0:
+                slice_by_instrument[i] = random.choice(slice_by_instrument_without_rests[i])
+            else:
+                slice_by_instrument[i] = random.choice(slice_by_instrument[i])
+
+
+        guitar_chords = slice_by_instrument['Electric Guitar'].chords
+        guitar_durations = slice_by_instrument['Electric Guitar'].durations
+        bass_chords = slice_by_instrument['Electric Bass'].chords
+        drum_chords = slice_by_instrument['Piano'].chords
+
+
+        starting_slice_notes = (np.asarray(encode_using_mapper(guitar_chords, self.guitar_mapper)) / len(self.guitar_mapper))[:20]
+        starting_slice_durations = (np.asarray(encode_using_mapper(guitar_durations, self.guitar_durations_mapper)) / len(
             self.guitar_durations_mapper))[:20]
-        starting_slice_bass = (np.asarray(encode_using_mapper(self.bass_chords[0], self.bass_mapper)) / len(self.bass_mapper))[:20]
-        starting_slice_drum = (np.asarray(encode_using_mapper(self.drum_chords[0], self.drum_mapper)) / len(self.drum_mapper))[:20]
+        starting_slice_bass = (np.asarray(encode_using_mapper(bass_chords, self.bass_mapper)) / len(self.bass_mapper))[:20]
+        starting_slice_drum = (np.asarray(encode_using_mapper(drum_chords, self.drum_mapper)) / len(self.drum_mapper))[:20]
 
         songs_in_db_cnt = len(get_songs_by_author(self.db_name))
         to_generate = count
