@@ -42,6 +42,8 @@ def model_song(request, model, instrument):
     elif "lstm" in model.lower():
         if "guitar" in instrument.lower():
             ML_model_name = "LSTMModel"
+        elif "bass" in instrument.lower():
+            ML_model_name = "LSTMBassModel"
         elif "multi" in instrument.lower():
             ML_model_name = 'LSTMMultiInstrumentModel'
     elif "gpt" in model.lower():
@@ -72,11 +74,11 @@ def execute_model(request, model, instrument, count):
         return HttpResponse("Markov Model is working in the background!")
 
     if "lstm" in model.lower():
-        if "guitar" in instrument.lower():
-            t = threading.Thread(target=create_LSTM, args=(count,))
+        if "guitar" in instrument.lower() or "bass" in instrument.lower():
+            t = threading.Thread(target=create_LSTM, args=(count, instrument))
             t.start()
             return HttpResponse("LSTM is working in the background!")
-        if "multi" in instrument.lower():
+        elif "multi" in instrument.lower():
             t = threading.Thread(target=create_multi_lstm, args=(count,))
             t.start()
             return HttpResponse("LSTM is working in the background!")
@@ -115,8 +117,8 @@ def create_markov(count, instrument_str):
     print("Generating music")
     mc.generate_music(chords, durations, count)
 
-def create_LSTM(count):
-    lstm = LSTMModel()
+def create_LSTM(count, instrument):
+    lstm = LSTMModel(instrument)
     data = lstm.load_data()
     input = lstm.preprocess_data(data)
     lstm.build_model()

@@ -12,11 +12,17 @@ from MLSongs.database.db_services import get_songs_by_author
 
 class LSTMModel(MLModelBase):
 
-    def __init__(self):
-        super(LSTMModel, self).__init__("LSTMModel", "ml_models/LSTM_guitar.h5")
-        self.target_instrument_str = 'Electric Guitar'
-        self.target_instrument = instrument.ElectricGuitar()
-        self.instrument_name = "guitar"
+    def __init__(self, instrument_str):
+        if "guitar" in instrument_str:
+            self.target_instrument_str = 'Electric Guitar'
+            self.target_instrument = instrument.ElectricGuitar()
+            self.instrument_name = "guitar"
+            super(LSTMModel, self).__init__("LSTMModel", "ml_models/LSTM_guitar.h5")
+        elif "bass" in instrument_str:
+            self.target_instrument_str = 'Electric Bass'
+            self.target_instrument = instrument.ElectricBass()
+            self.instrument_name = "bass"
+            super(LSTMModel, self).__init__("LSTMBassModel", "ml_models/LSTM_bass.h5")
         self.slice_len = 10
 
 
