@@ -9,6 +9,7 @@ import random
 import threading
 from MLSongs.ml_agents.multi_instrument_LSTM import MultiInstrumentLSTM
 from MLSongs.database.db_services import get_model, get_songs_by_author, get_all_songs, create_empty_song
+from MLSongs.ml_agents.MusicVAE import MusicVAE
 
 
 class SongViewSet(viewsets.ModelViewSet):
@@ -48,6 +49,8 @@ def model_song(request, model, instrument):
             ML_model_name = 'LSTMMultiInstrumentModel'
     elif "gpt" in model.lower():
         ML_model_name = "GPT-2Model"
+    elif "vae" in model.lower():
+        ML_model_name = "MusicVAEBass"
 
     ml_author = get_model(ML_model_name)
     if not ml_author:
@@ -88,11 +91,21 @@ def execute_model(request, model, instrument, count):
         t.start()
         return HttpResponse("GPT-2 postprocessor is working in the background!")
 
+    if "vae" in model.lower():
+        t = threading.Thread(target=create_vae, args=(count, instrument))
+        t.start()
+        return HttpResponse("MusicVAE is working in the background!")
+
 
 
     return HttpResponse("OK")
 
-
+def create_vae(count, instrument_str):
+    vae = MusicVAE(instrument_str)
+    data = vae.load_data()
+    data = vae.preprocess_data(data)
+    vae.build_model()
+    vae.predict(data, count, 0.8)
 
 def create_gpt():
     gpt = Music_GPT_2()
@@ -137,3 +150,6 @@ def execute_model_once(request, model, instrument):
 
 def help(request):
     return render(request, 'help.html')
+
+def about(request):
+    return render(request, 'about.html')

@@ -27,6 +27,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('song', views.get_random_song),
     path('debug', views.debug),
+    path('about', views.about),
     path('help', views.help),
     path('song/<slug:model>/<slug:instrument>', views.model_song),
     path('generate/<slug:model>/<slug:instrument>', views.execute_model_once),

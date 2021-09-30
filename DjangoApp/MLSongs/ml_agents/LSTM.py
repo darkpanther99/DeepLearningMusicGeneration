@@ -66,7 +66,7 @@ class LSTMModel(MLModelBase):
             generated_output = generate_notes(self.model, input, self.mapper, self.mapper_list, temp=temp)
 
             midi_path = f'LSTM_{self.instrument_name}_{j}.mid'
-            create_midi_with_embedded_durations(generated_output, target_instrument=instrument.ElectricGuitar(), filename=midi_path)
+            create_midi_with_embedded_durations(generated_output, target_instrument=self.target_instrument, filename=midi_path)
 
             change_midi_instrument(midi_path, self.target_instrument)
             midi_to_wav(midi_path, f'static/songs/LSTM_{self.instrument_name}_{j}.wav', True)

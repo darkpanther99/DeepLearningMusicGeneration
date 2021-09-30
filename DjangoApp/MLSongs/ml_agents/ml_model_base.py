@@ -24,5 +24,5 @@ class MLModelBase:
         # The song's title is the path without the wav extension.
         save_song(song_path[:-4], ml_author, song_path)
 
-    def predict(self):
+    def predict(self, input, count, temp):
         pass
