@@ -3,6 +3,9 @@ from tqdm import tqdm
 import os
 import pandas as pd
 from collections import Counter
+import math
+from music21.interval import Interval
+from music21.scale import ConcreteScale, MajorScale
 
 def convert_to_float(frac_str):
     # From: https://stackoverflow.com/questions/1806278/convert-fraction-to-float
@@ -41,7 +44,7 @@ def get_number_from_duration(duration):
     duration = duration.replace(" ", ",")
     return duration
 
-def get_durations(path):
+def extract_midis(path):
 
     files = []
     all_notes = []
@@ -75,22 +78,20 @@ def get_durations(path):
                         rest_durations.append(element.duration)
 
                 files.append(file+" "+str(part.partName))
-                all_notes.append(notes)
-                all_note_offsets.append(note_offsets)
-                all_roots.append(roots)
-                if len(rests) <= 0:
-                    rests = [0]
-                    rest_durations = [0]
-                all_rests.append(rests)
-                all_rest_durations.append(rest_durations)
+                if len(notes) > 0:
+                    all_notes.append(notes)
+                    all_note_offsets.append(note_offsets)
+                    all_roots.append(roots)
+                    if len(rests) <= 0:
+                        rests = [0]
+                        rest_durations = [0]
+                    all_rests.append(rests)
+                    all_rest_durations.append(rest_durations)
 
 
     return files, all_notes, all_rests, all_rest_durations, all_roots, all_note_offsets
 
-from music21.interval import Interval
-from music21.scale import ConcreteScale, MajorScale
-
-def get_intervals(pitches):
+def get_max_intervals(pitches):
     lengths = []
     for pitch in pitches:
         for pitch2 in pitches:
@@ -120,7 +121,7 @@ def get_duration_from_offset(offsets):
     return durations
 
 def analyze_music(path):
-    files, pitches, rests, rest_durations, roots, note_offsets = get_durations(path)
+    files, pitches, rests, rest_durations, roots, note_offsets = extract_midis(path)
     all_music_data = []
 
     for i in tqdm(range(len(rest_durations))):
@@ -129,12 +130,24 @@ def analyze_music(path):
         #    elements.append(convert_to_float(get_number_from_duration(str(j))))
 
         rest_durations_local = list(map(convert_to_float, map(get_number_from_duration, map(str, rest_durations[i]))))
-        note_durations_local = get_duration_from_offset(note_offsets[i])
+        note_durations_local = list(map(convert_to_float, get_duration_from_offset(note_offsets[i])))
 
-        max_interval = get_intervals(pitches[i])
+        #max_interval = get_max_intervals(pitches[i])
+        max_interval = 0
 
         intervals_count = Counter(get_direct_intervals(roots[i]))
+        intervals_count = dict(sorted(intervals_count.items(), key=lambda item: item[1], reverse=True)[0:5])
         durations_count = Counter(note_durations_local)
+        durations_count_merged = dict()
+        for k, v in durations_count.items():
+            k = round(k, 4)
+            for used_key in durations_count_merged.keys():
+                if math.isclose(used_key, k, rel_tol=1e-06):
+                    durations_count_merged[used_key] += v
+                    break
+            else:
+                durations_count_merged[k] = v
+        durations_count = dict(sorted(durations_count_merged.items(), key=lambda item: item[1], reverse=True)[0:5])
 
         notes = list(map(note.Note, pitches[i]))
         notes_str = list(map(str, notes))
@@ -155,10 +168,9 @@ def analyze_music(path):
         music_data = (files[i], len(unique_pitches), unique_notes_cnt, notes_in_scale, notes_not_in_scale, max_interval,
                 sum(rest_durations_local), max(rest_durations_local), intervals_count, durations_count)
         all_music_data.append(music_data)
-        print(music_data)
 
 
     return pd.DataFrame(data=all_music_data, columns=['track_and_instrument', 'unique_pitches', 'unique_notes', 'notes_in_scale', 'notes_not_in_scale', 'max_interval', 'sum_rests', 'longest_rest', 'intervals_count', 'durations_count'])
 
 if __name__ == '__main__':
-    analyze_music(r"D:/Egyetem/6.felev/Önlab/MarkovOutputs")
+    print(analyze_music(r"D:/Egyetem/6.felev/Önlab/MaidenMidis").to_string())
