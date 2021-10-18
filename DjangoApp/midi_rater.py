@@ -6,6 +6,8 @@ from collections import Counter
 import math
 from music21.interval import Interval
 from music21.scale import ConcreteScale, MajorScale
+import numpy as np
+from scipy.stats import mode
 
 def convert_to_float(frac_str):
     # From: https://stackoverflow.com/questions/1806278/convert-fraction-to-float
@@ -120,6 +122,13 @@ def get_duration_from_offset(offsets):
 
     return durations
 
+def add_dicts(source, target):
+    for key, value in source.items():
+        if key in target.keys():
+            target[key] += value
+        else:
+            target[key] = value
+
 def analyze_music(path):
     files, pitches, rests, rest_durations, roots, note_offsets = extract_midis(path)
     all_music_data = []
@@ -172,5 +181,106 @@ def analyze_music(path):
 
     return pd.DataFrame(data=all_music_data, columns=['track_and_instrument', 'unique_pitches', 'unique_notes', 'notes_in_scale', 'notes_not_in_scale', 'max_interval', 'sum_rests', 'longest_rest', 'intervals_count', 'durations_count'])
 
+
+def highest_sums(intervals):
+    final_count_dict = dict()
+    for interval_dict in intervals:
+        for key, value in interval_dict.items():
+            if key in final_count_dict.keys():
+                final_count_dict[key] += value
+            else:
+                final_count_dict[key] = value
+    top_5_count = dict(sorted(final_count_dict.items(), key=lambda item: item[1], reverse=True)[0:5])
+    #print(final_count_dict)
+    return list(top_5_count.keys())
+
+
+def positionwise_mode(intervals):
+    all_keys = []
+    for interval_dict in intervals:
+        keys_to_add = list(interval_dict.keys())
+        while len(keys_to_add)<5:
+            keys_to_add.append(None)
+        all_keys.append(keys_to_add)
+
+    all_keys = np.asarray(all_keys)
+    counts = []
+    for i in range(5):
+        cnt = Counter(all_keys[:, i])
+        counts.append(cnt)
+
+    maximums = []
+    for i in range(len(counts)):
+        new_dict = dict()
+        for idx, (key, value) in enumerate(sorted(counts[i].items(), key=lambda item: item[1], reverse=True)):
+            if idx == 0:
+                maximums.append(key)
+            else:
+                if key not in maximums and key:
+                    new_dict[key] = value
+        if i != 4:
+            add_dicts(new_dict, counts[i + 1])
+    #print(counts)
+    return maximums
+
+
+def positionwise_sums(intervals):
+    all_items = []
+    for interval_dict in intervals:
+        items_to_add = list(interval_dict.items())
+        while len(items_to_add)<5:
+            items_to_add.append((0, 0))
+        all_items.append(items_to_add)
+
+    all_items = np.asarray(all_items)
+    counts = []
+    for i in range(5):
+        column = all_items[:, i]
+        col_dict = dict()
+        for key, value in column:
+            if key in col_dict.keys():
+                col_dict[key] += value
+            else:
+                col_dict[key] = value
+        counts.append(col_dict)
+
+    maximums = []
+    for i in range(len(counts)):
+        new_dict = dict()
+        for idx, (key, value) in enumerate(sorted(counts[i].items(), key=lambda item: item[1], reverse=True)):
+            if idx == 0:
+                maximums.append(key)
+            else:
+                if key not in maximums and key:
+                    new_dict[key] = value
+        if i != 4:
+            add_dicts(new_dict, counts[i + 1])
+    #print(counts)
+    return maximums
+
+
+def further_analyze_music(df_music, filter_outliers = False):
+    if filter_outliers:
+        mean_longest_rest = df_music['longest_rest'].mean()
+        df_music = df_music[df_music['longest_rest']<mean_longest_rest]
+
+    return df_music.drop(
+        columns=['track_and_instrument']
+    ).agg(
+        {'unique_pitches':['mean', 'median'],
+         'unique_notes':['mean', 'median'],
+         'notes_in_scale':['mean', 'median'],
+         'notes_not_in_scale':['mean', 'median'],
+         'sum_rests':['mean', 'median'],
+         'longest_rest':['mean', 'median'],
+         'intervals_count':[highest_sums, positionwise_mode, positionwise_sums],
+         'durations_count':[highest_sums, positionwise_mode, positionwise_sums]
+         }
+    )
+
+
+
 if __name__ == '__main__':
-    print(analyze_music(r"D:/Egyetem/6.felev/Önlab/MaidenMidis").to_string())
+    #df_music = analyze_music(r"D:/Egyetem/6.felev/Önlab/MarkovOutputs")
+    print('\n', further_analyze_music(analyze_music(r"D:/Egyetem/6.felev/Önlab/MarkovOutputs"), True).to_string())
+    print('\n',further_analyze_music(analyze_music(r"D:/MIDITest"), True).to_string())
