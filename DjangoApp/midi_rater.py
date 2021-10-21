@@ -129,7 +129,7 @@ def add_dicts(source, target):
         else:
             target[key] = value
 
-def analyze_music(path):
+def get_music_df(path):
     files, pitches, rests, rest_durations, roots, note_offsets = extract_midis(path)
     all_music_data = []
 
@@ -259,7 +259,8 @@ def positionwise_sums(intervals):
     return maximums
 
 
-def further_analyze_music(df_music, filter_outliers = False):
+def analyze_music(path, filter_outliers = False):
+    df_music = get_music_df(path)
     if filter_outliers:
         mean_longest_rest = df_music['longest_rest'].mean()
         df_music = df_music[df_music['longest_rest']<mean_longest_rest]
@@ -281,6 +282,5 @@ def further_analyze_music(df_music, filter_outliers = False):
 
 
 if __name__ == '__main__':
-    #df_music = analyze_music(r"D:/Egyetem/6.felev/Önlab/MarkovOutputs")
-    print('\n', further_analyze_music(analyze_music(r"D:/Egyetem/6.felev/Önlab/MarkovOutputs"), True).to_string())
-    print('\n',further_analyze_music(analyze_music(r"D:/MIDITest"), True).to_string())
+    print('\n', analyze_music(r"D:/Egyetem/6.felev/Önlab/MarkovOutputs", True).to_string())
+    print('\n', analyze_music(r"D:/MIDITest", True).to_string())
