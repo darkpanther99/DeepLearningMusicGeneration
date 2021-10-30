@@ -108,8 +108,6 @@ def execute_model(request, model, instrument, count):
         t.start()
         return HttpResponse("MusicVAE is working in the background!")
 
-
-
     return HttpResponse("OK")
 
 def create_attention(count, instrument):
@@ -158,25 +156,9 @@ def create_LSTM(count, instrument):
 
 
 def debug(request):
-    #from MLSongs.database. models import MLModel, Song
-    #for i in MLModel.objects.all():
-    #    print(i.name, i.path)
-    import os
-    import json
-
-    songs = get_all_songs()
-    chosen_song = random.choice(songs)
-    with open(os.getcwd()+"/static/songs/"+chosen_song.path, "rb") as wavfile:
-        input_wav = wavfile.read()
-
-    dict_out = {
-        'name' : chosen_song.title,
-        'author' : chosen_song.author.name,
-        'data' : str(input_wav)
-    }
-
-    return HttpResponse(json.dumps(dict_out))
-
+    from MLSongs.database. models import MLModel, Song
+    for i in MLModel.objects.all():
+        print(i.name, i.path)
 
 def execute_model_once(request, model, instrument):
     return execute_model(request, model, instrument, 1)
