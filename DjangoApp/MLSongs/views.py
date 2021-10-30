@@ -10,6 +10,7 @@ import threading
 from MLSongs.ml_agents.multi_instrument_LSTM import MultiInstrumentLSTM
 from MLSongs.database.db_services import get_model, get_songs_by_author, get_all_songs, create_empty_song
 from MLSongs.ml_agents.MusicVAE import MusicVAE
+from MLSongs.ml_agents.Attention import AttentionModel
 
 
 class SongViewSet(viewsets.ModelViewSet):
@@ -51,6 +52,11 @@ def model_song(request, model, instrument):
         ML_model_name = "GPT-2Model"
     elif "vae" in model.lower():
         ML_model_name = "MusicVAEBass"
+    elif "attention" in model.lower():
+        if "guitar" in instrument.lower():
+            ML_model_name = "AttentionModelLong"
+        elif "bass" in instrument.lower():
+            ML_model_name = "AttentionModelBass"
 
     ml_author = get_model(ML_model_name)
     if not ml_author:
@@ -86,6 +92,12 @@ def execute_model(request, model, instrument, count):
             t.start()
             return HttpResponse("LSTM is working in the background!")
 
+    if "attention" in model.lower():
+        if "guitar" in instrument.lower() or "bass" in instrument.lower():
+            t = threading.Thread(target=create_attention, args=(count, instrument))
+            t.start()
+            return HttpResponse("Attention based model is working in the background!")
+
     if "gpt" in model.lower():
         t = threading.Thread(target=create_gpt)
         t.start()
@@ -99,6 +111,13 @@ def execute_model(request, model, instrument, count):
 
 
     return HttpResponse("OK")
+
+def create_attention(count, instrument):
+    att = AttentionModel(instrument)
+    data = att.load_data()
+    input = att.preprocess_data(data)
+    att.build_model()
+    att.predict(input, count, 0.8)
 
 def create_vae(count, instrument_str):
     vae = MusicVAE(instrument_str)
@@ -139,10 +158,24 @@ def create_LSTM(count, instrument):
 
 
 def debug(request):
-    from MLSongs.database. models import MLModel, Song
-    for i in MLModel.objects.all():
-        print(i.name, i.path)
-    return HttpResponse("Debug script running!")
+    #from MLSongs.database. models import MLModel, Song
+    #for i in MLModel.objects.all():
+    #    print(i.name, i.path)
+    import os
+    import json
+
+    songs = get_all_songs()
+    chosen_song = random.choice(songs)
+    with open(os.getcwd()+"/static/songs/"+chosen_song.path, "rb") as wavfile:
+        input_wav = wavfile.read()
+
+    dict_out = {
+        'name' : chosen_song.title,
+        'author' : chosen_song.author.name,
+        'data' : str(input_wav)
+    }
+
+    return HttpResponse(json.dumps(dict_out))
 
 
 def execute_model_once(request, model, instrument):

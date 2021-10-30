@@ -26,10 +26,6 @@ class MultiInstrumentLSTM(MLModelBase):
         self.instrument_name = "guitar+bass"
         self.slice_len = 20
 
-    def load_data(self):
-        midiparts = parse_midi_notes_and_durations(LOCAL_ABSOLUTE_PATH)
-        return midiparts
-
     def preprocess_data(self, data):
         guitar_chords_raw, guitar_durations_raw = get_chords_and_durations_of_instrument(data, self.target_instruments_str[0])
         bass_chords_raw, bass_durations = get_chords_and_durations_of_instrument(data, self.target_instruments_str[1])

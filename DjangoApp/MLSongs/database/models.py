@@ -19,6 +19,4 @@ class Song(models.Model):
 
 
 if __name__ == '__main__':
-    #MODEL inits here
-    m = MLModel(name='MarkovChain')
-    m.save()
+    pass

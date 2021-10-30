@@ -28,10 +28,6 @@ class MarkovModel(MLModelBase):
         super(MarkovModel, self).__init__(db_name, "")
 
 
-    def load_data(self):
-        midiparts = parse_midi_notes_and_durations(LOCAL_ABSOLUTE_PATH)
-        return midiparts
-
     def preprocess_data(self, data):
 
         allchords, alldurations = get_chords_and_durations_of_instrument(data, self.target_instrument_str)

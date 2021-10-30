@@ -1,5 +1,7 @@
 from keras.models import load_model
 from MLSongs.database.db_services import get_model_with_insert, save_song
+from MLSongs.ml_agents.preprocessing_utils import parse_midi_notes_and_durations
+from DjangoApp.secretsconfig import LOCAL_ABSOLUTE_PATH
 
 class MLModelBase:
 
@@ -10,7 +12,8 @@ class MLModelBase:
             self.path = args[1]
 
     def load_data(self):
-        pass
+        midiparts = parse_midi_notes_and_durations(LOCAL_ABSOLUTE_PATH)
+        return midiparts
 
     def preprocess_data(self, data):
         pass

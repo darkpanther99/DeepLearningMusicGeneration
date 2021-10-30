@@ -1,12 +1,10 @@
 from music21 import instrument
-
-from DjangoApp.secretsconfig import LOCAL_ABSOLUTE_PATH
 from MLSongs.database.db_services import get_songs_by_author
 from MLSongs.ml_agents.ml_model_base import MLModelBase
 from MLSongs.ml_agents.postprocessing_utils import sample, create_midi_with_embedded_durations, \
     change_midi_instrument, midi_to_wav
-from MLSongs.ml_agents.preprocessing_utils import parse_midi_notes_and_durations, \
-    get_chords_and_durations_of_instrument, create_mapper_data, create_mapper, encode_notes, clear_encoded_data, \
+from MLSongs.ml_agents.preprocessing_utils import get_chords_and_durations_of_instrument, \
+     create_mapper_data, create_mapper, encode_notes, clear_encoded_data, \
     parse_everything_together, filter_outliers
 from MLSongs.ml_agents.utilities import combine_chords_with_durations, get_key_from_value
 import numpy as np
@@ -22,10 +20,6 @@ class MusicVAE(MLModelBase):
             self.slice_len = 256 #TODO ez most 256, vagy 16? melyik model legyen használva?
             self.latent_dim = 256
             super(MusicVAE, self).__init__("MusicVAEBass", "ml_models/VAE_bassdecoder.h5")
-
-    def load_data(self):
-        midiparts = parse_midi_notes_and_durations(LOCAL_ABSOLUTE_PATH)
-        return midiparts
 
     def preprocess_data(self, data):
         allchords, alldurations = get_chords_and_durations_of_instrument(data, self.target_instrument_str)
