@@ -15,15 +15,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from rest_framework import routers
 from MLSongs import views
-
-router = routers.DefaultRouter()
-router.register('songs', views.SongViewSet)
 
 urlpatterns = [
     path('', views.get_random_song),
-    path('rest', include(router.urls)),
     path('admin/', admin.site.urls),
     path('song', views.get_random_song),
     path('debug', views.debug),

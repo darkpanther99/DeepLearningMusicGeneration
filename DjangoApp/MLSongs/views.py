@@ -1,7 +1,5 @@
 from django.http import HttpResponse
 from django.shortcuts import render
-from rest_framework import viewsets
-from MLSongs.serializers import SongSerializer
 from MLSongs.ml_agents.markov_chain import MarkovModel
 from MLSongs.ml_agents.LSTM import LSTMModel
 from MLSongs.ml_agents.GPT_2 import Music_GPT_2
@@ -12,10 +10,6 @@ from MLSongs.database.db_services import get_model, get_songs_by_author, get_all
 from MLSongs.ml_agents.MusicVAE import MusicVAE
 from MLSongs.ml_agents.Attention import AttentionModel
 
-
-class SongViewSet(viewsets.ModelViewSet):
-    queryset = get_all_songs()
-    serializer_class = SongSerializer
 
 def index(request):
     return render(request, 'index.html')
