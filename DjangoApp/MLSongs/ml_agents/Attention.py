@@ -43,8 +43,8 @@ class AttentionModel(MLModelBase):
             self.target_instrument_str = 'Electric Guitar'
             self.target_instrument = instrument.ElectricGuitar()
             self.instrument_name = "guitar"
-            super(AttentionModel, self).__init__("AttentionModelLong", "ml_models/Attention_guitar_long.h5")
-            self.slice_len = 200
+            super(AttentionModel, self).__init__("AttentionModel", "ml_models/Attention_guitar.h5")
+            self.slice_len = 20
         elif "bass" in instrument_str:
             self.target_instrument_str = 'Electric Bass'
             self.target_instrument = instrument.ElectricBass()

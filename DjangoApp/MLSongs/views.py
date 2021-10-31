@@ -54,7 +54,7 @@ def model_song(request, model, instrument):
         ML_model_name = "MusicVAEBass"
     elif "attention" in model.lower():
         if "guitar" in instrument.lower():
-            ML_model_name = "AttentionModelLong"
+            ML_model_name = "AttentionModel"
         elif "bass" in instrument.lower():
             ML_model_name = "AttentionModelBass"
 
