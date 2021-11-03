@@ -3,5 +3,7 @@ librosa
 numpy
 matplotlib
 tqdm
-music21
+music21==6.7.1
 mchmm
+tensorflow==2.6.0
+midi2audio
