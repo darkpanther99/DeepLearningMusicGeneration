@@ -11,9 +11,6 @@ from MLSongs.ml_agents.MusicVAE import MusicVAE
 from MLSongs.ml_agents.Attention import AttentionModel
 
 
-def index(request):
-    return render(request, 'index.html')
-
 def get_random_song(request):
     songs = get_all_songs()
     chosen_song = random.choice(songs)
@@ -150,9 +147,7 @@ def create_LSTM(count, instrument):
 
 
 def debug(request):
-    from MLSongs.database. models import MLModel, Song
-    for i in MLModel.objects.all():
-        print(i.name, i.path)
+    return HttpResponse('OK')
 
 def execute_model_once(request, model, instrument):
     return execute_model(request, model, instrument, 1)
