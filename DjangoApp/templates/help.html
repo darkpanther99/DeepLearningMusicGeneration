@@ -33,6 +33,7 @@ To listen to a song from a specific model, use the url of the webpage with param
     <option value="gpt">GPT-2</option>
     <option value="vae">MusicVAE</option>
     <option value="attention">Attention</option>
+    <option value="transformer">Transformer</option>
 </select>
 
 <select class="form-select" name="instruments" id="instruments">
@@ -46,7 +47,8 @@ To listen to a song from a specific model, use the url of the webpage with param
 
 <h2>To generate a song</h2>
 To generate a song from a model, use the url of the webpage with parameters /generate/{model_name}/{instrument}.<br>
-Number of songs is an optional last parameter: /generate/{model_name}/{instrument}/{count} will generate {count} songs.
+Number of songs is an optional parameter: /generate/{model_name}/{instrument}/{count} will generate {count} songs.<br>
+Temperature is an another optional parameter: /generate/{model_name}/{instrument}/{count}/{temp} will generate songs with {temp} sampling temperature. It is a floating point number, which is 0.8 by default. The higher it is, the more unpredictable the output will be, the lower it is, the more repetitive the output will be.
 <br>
 
 <div class="col-sm-3">
@@ -58,6 +60,7 @@ Number of songs is an optional last parameter: /generate/{model_name}/{instrumen
     <option value="gpt">GPT-2</option>
     <option value="vae">MusicVAE</option>
     <option value="attention">Attention</option>
+    <option value="transformer">Transformer</option>
 </select>
 
 <select class="form-select" name="instruments2" id="instruments2">
