@@ -14,17 +14,21 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, register_converter
+from .converters import FloatUrlParameterConverter
 from MLSongs import views
+
+register_converter(FloatUrlParameterConverter, 'float')
 
 urlpatterns = [
     path('', views.get_random_song),
     path('admin/', admin.site.urls),
-    path('song', views.get_random_song),
     path('debug', views.debug),
     path('about', views.about),
     path('help', views.help),
+    path('song', views.get_random_song),
     path('song/<slug:model>/<slug:instrument>', views.model_song),
     path('generate/<slug:model>/<slug:instrument>', views.execute_model_once),
-    path('generate/<slug:model>/<slug:instrument>/<int:count>', views.execute_model)
+    path('generate/<slug:model>/<slug:instrument>/<int:count>', views.execute_model_without_temp),
+    path('generate/<slug:model>/<slug:instrument>/<int:count>/<float:temp>', views.execute_model),
 ]
