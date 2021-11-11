@@ -1,4 +1,3 @@
-from DjangoApp.secretsconfig import LOCAL_ABSOLUTE_PATH
 from MLSongs.ml_agents.ml_model_base import MLModelBase
 from MLSongs.ml_agents.utilities import get_key_from_value
 from MLSongs.ml_agents.postprocessing_utils import create_midi_with_durations, midi_to_wav, change_midi_instrument
@@ -81,7 +80,7 @@ class MarkovModel(MLModelBase):
         with open('ml_models/markov_bass_durations', 'wb') as outp:  # Overwrites any existing file.
             pickle.dump(self.durationmc, outp, pickle.HIGHEST_PROTOCOL)
 
-    def generate_music(self, encoded_chord_string, encoded_duration_string, count):
+    def generate_music(self, encoded_chord_string, encoded_duration_string, count, length=200):
         songs_in_db_cnt = len(get_songs_by_author(self.db_name))
         to_generate = count
 
@@ -93,13 +92,13 @@ class MarkovModel(MLModelBase):
             # A workaround is this ugly while True loop, which will spin the CPU until we get an errorless simulation.
             while chord_states is None:
                 try:
-                    ids, chord_states = self.chordsmc.simulate(200,tf=np.asarray(self.chordsmc.observed_matrix).astype('float64'),start=random.choice(encoded_chord_string))
+                    ids, chord_states = self.chordsmc.simulate(length,tf=np.asarray(self.chordsmc.observed_matrix).astype('float64'),start=random.choice(encoded_chord_string))
                 except:
                     pass
 
             while duration_states is None:
                 try:
-                    durids, duration_states = self.durationmc.simulate(200, tf=np.asarray(self.durationmc.observed_matrix).astype('float64'), start=random.choice(encoded_duration_string))
+                    durids, duration_states = self.durationmc.simulate(length, tf=np.asarray(self.durationmc.observed_matrix).astype('float64'), start=random.choice(encoded_duration_string))
                 except:
                     pass
 
@@ -117,7 +116,7 @@ class MarkovModel(MLModelBase):
             midi_path = f'Markov_{self.instrument_name}_{j}.mid'
             create_midi_with_durations(music, musicdurations, self.target_instrument, midi_path)
             change_midi_instrument(midi_path, self.target_instrument)
-            midi_to_wav(midi_path, f'static/songs/Markov_{self.instrument_name}_{j}.wav', True)
+            midi_to_wav(midi_path, f'static/songs/Markov_{self.instrument_name}_{j}.wav', False)
 
             self.save_song_to_db(f'Markov_{self.instrument_name}_{j}.wav')
 

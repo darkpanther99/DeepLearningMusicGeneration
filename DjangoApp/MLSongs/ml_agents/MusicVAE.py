@@ -17,9 +17,14 @@ class MusicVAE(MLModelBase):
             self.target_instrument_str = "Electric Bass"
             self.target_instrument = instrument.ElectricBass()
             self.instrument_name = "bass"
-            self.slice_len = 256 #TODO ez most 256, vagy 16? melyik model legyen használva?
-            self.latent_dim = 256
             super(MusicVAE, self).__init__("MusicVAEBass", "ml_models/VAE_bassdecoder.h5")
+        if "guitar" in instrument_str.lower():
+            self.target_instrument_str = "Electric Guitar"
+            self.target_instrument = instrument.ElectricGuitar()
+            self.instrument_name = "guitar"
+            super(MusicVAE, self).__init__("MusicVAEGuitar", "ml_models/VAE_guitar_long_decoder.h5")
+        self.slice_len = 256
+        self.latent_dim = 256
 
     def preprocess_data(self, data):
         allchords, alldurations = get_chords_and_durations_of_instrument(data, self.target_instrument_str)
@@ -69,6 +74,6 @@ class MusicVAE(MLModelBase):
             create_midi_with_embedded_durations(predicted, target_instrument=self.target_instrument, filename=midi_path)
 
             change_midi_instrument(midi_path, self.target_instrument)
-            midi_to_wav(midi_path, f'static/songs/MusicVAE_{self.instrument_name}_{j}.wav', True)
+            midi_to_wav(midi_path, f'static/songs/MusicVAE_{self.instrument_name}_{j}.wav', False)
 
             self.save_song_to_db(f'MusicVAE_{self.instrument_name}_{j}.wav')

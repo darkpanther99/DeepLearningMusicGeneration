@@ -1,7 +1,5 @@
 import random
-
 from MLSongs.ml_agents.ml_model_base import MLModelBase
-from DjangoApp.secretsconfig import LOCAL_ABSOLUTE_PATH
 import numpy as np
 from music21 import instrument, note
 from music21.stream import Score
@@ -64,77 +62,85 @@ class MultiInstrumentLSTM(MLModelBase):
 
         return guitar_chords_raw, guitar_durations_raw, bass_chords_raw, drum_chords_raw
 
-    def predict(self, data, count, temp):
-        #startidx = np.random.randint(0, len(input) - 1)
-        #starting_slice = input[startidx]
-        #TODO ne az első daltól lehessen csak kezdeni, hanem random daltól
-        #Keres egy random dalta mappában, azt beolvassa, első sliceot átalakítja, normálja, stb, és használja
+    def predict(self, data, count, temp, length=500):
 
         songs = list(set([i.song for i in data]))
 
-        random_song = random.choice(songs)
-        slice_by_instrument = dict(zip(self.target_instruments_str, [[] for i in self.target_instruments_str]))
-        for j in self.target_instruments_str:
-            for i in data:
-                if i.song == random_song and i.instrument == j:
-                    slice_by_instrument[j].append(i)
+        bug = True
+        while bug:
+            try:
+                condition = True
+                while condition:
+                    try:
+                        random_song = random.choice(songs)
+                        slice_by_instrument = dict(zip(self.target_instruments_str, [[] for i in self.target_instruments_str]))
+                        for j in self.target_instruments_str:
+                            for i in data:
+                                if i.song == random_song and i.instrument == j:
+                                    slice_by_instrument[j].append(i)
 
-        slice_by_instrument_without_rests = dict(zip(self.target_instruments_str, [[] for i in self.target_instruments_str]))
+                        slice_by_instrument_without_rests = dict(zip(self.target_instruments_str, [[] for i in self.target_instruments_str]))
 
-        for i in slice_by_instrument.keys():
-            for song in slice_by_instrument[i]:
-                if not isinstance(song.chords[0], note.Rest):
-                    slice_by_instrument_without_rests[i].append(song)
-            if len(slice_by_instrument_without_rests[i]) != 0:
-                slice_by_instrument[i] = random.choice(slice_by_instrument_without_rests[i])
-            else:
-                slice_by_instrument[i] = random.choice(slice_by_instrument[i])
+                        for i in slice_by_instrument.keys():
+                            for song in slice_by_instrument[i]:
+                                if not isinstance(song.chords[0], note.Rest):
+                                    slice_by_instrument_without_rests[i].append(song)
+                            if len(slice_by_instrument_without_rests[i]) != 0:
+                                slice_by_instrument[i] = random.choice(slice_by_instrument_without_rests[i])
+                            else:
+                                slice_by_instrument[i] = random.choice(slice_by_instrument[i])
 
+                        condition = False
+                    except IndexError:
+                        continue
 
-        guitar_chords = slice_by_instrument['Electric Guitar'].chords
-        guitar_durations = slice_by_instrument['Electric Guitar'].durations
-        bass_chords = slice_by_instrument['Electric Bass'].chords
-        drum_chords = slice_by_instrument['Piano'].chords
-
-
-        starting_slice_notes = (np.asarray(encode_using_mapper(guitar_chords, self.guitar_mapper)) / len(self.guitar_mapper))[:20]
-        starting_slice_durations = (np.asarray(encode_using_mapper(guitar_durations, self.guitar_durations_mapper)) / len(
-            self.guitar_durations_mapper))[:20]
-        starting_slice_bass = (np.asarray(encode_using_mapper(bass_chords, self.bass_mapper)) / len(self.bass_mapper))[:20]
-        starting_slice_drum = (np.asarray(encode_using_mapper(drum_chords, self.drum_mapper)) / len(self.drum_mapper))[:20]
-
-        songs_in_db_cnt = len(get_songs_by_author(self.db_name))
-        to_generate = count
-
-        for j in range(songs_in_db_cnt, songs_in_db_cnt + to_generate):
-
-            generated_output = generate_multi_instrument_notes(self.model, starting_slice_notes, starting_slice_durations,
-                                                               starting_slice_bass, starting_slice_drum, self.guitar_mapper,
-                                                               self.guitar_durations_mapper, self.bass_mapper,
-                                                               self.drum_mapper, self.guitar_mapper_list, self.durations_mapper_list, temp=temp)
-
-            (guitar_output, bass_output, drum_output) = generated_output
+                guitar_chords = slice_by_instrument['Electric Guitar'].chords
+                guitar_durations = slice_by_instrument['Electric Guitar'].durations
+                bass_chords = slice_by_instrument['Electric Bass'].chords
+                drum_chords = slice_by_instrument['Piano'].chords
 
 
-            guitar_part = create_midipart_with_durations(guitar_output, target_instrument=self.target_instruments[0])
-            bass_part = create_midipart_with_durations(bass_output, target_instrument=self.target_instruments[1])
-            #drum_part = create_drum_part_with_durations(drum_output)
+                starting_slice_notes = (np.asarray(encode_using_mapper(guitar_chords, self.guitar_mapper)) / len(self.guitar_mapper))[:20]
+                starting_slice_durations = (np.asarray(encode_using_mapper(guitar_durations, self.guitar_durations_mapper)) / len(
+                    self.guitar_durations_mapper))[:20]
+                starting_slice_bass = (np.asarray(encode_using_mapper(bass_chords, self.bass_mapper)) / len(self.bass_mapper))[:20]
+                starting_slice_drum = (np.asarray(encode_using_mapper(drum_chords, self.drum_mapper)) / len(self.drum_mapper))[:20]
 
-            # TODO dobokat megcsinálni rendesen, hogy dob hangja legyen
+                songs_in_db_cnt = len(get_songs_by_author(self.db_name))
+                to_generate = count
 
-            guitar_part.insert(0, self.target_instruments[0])
-            bass_part.insert(0, self.target_instruments[1])
-            #drum_part.insert(0, self.target_instruments[2])
+                for j in range(songs_in_db_cnt, songs_in_db_cnt + to_generate):
 
-            full_midi = Score()
-            full_midi.insert(0, guitar_part)
-            full_midi.insert(0, bass_part)
-            #full_midi.insert(0, drum_part)
+                    generated_output = generate_multi_instrument_notes(self.model, starting_slice_notes, starting_slice_durations,
+                                                                       starting_slice_bass, starting_slice_drum, self.guitar_mapper,
+                                                                       self.guitar_durations_mapper, self.bass_mapper,
+                                                                       self.drum_mapper, self.guitar_mapper_list, self.durations_mapper_list, temp=temp, length = length)
 
-            midi_path = f'LSTM_{self.instrument_name}_{j}.mid'
+                    (guitar_output, bass_output, drum_output) = generated_output
 
-            full_midi.write('midi', fp=midi_path)
-            midi_to_wav(midi_path, f'static/songs/LSTM_{self.instrument_name}_{j}.wav', True)
 
-            self.save_song_to_db(f'LSTM_{self.instrument_name}_{j}.wav')
+                    guitar_part = create_midipart_with_durations(guitar_output, target_instrument=self.target_instruments[0])
+                    bass_part = create_midipart_with_durations(bass_output, target_instrument=self.target_instruments[1])
+                    #drum_part = create_drum_part_with_durations(drum_output)
+
+                    # TODO fix drum sounds
+
+                    guitar_part.insert(0, self.target_instruments[0])
+                    bass_part.insert(0, self.target_instruments[1])
+                    #drum_part.insert(0, self.target_instruments[2])
+
+                    full_midi = Score()
+                    full_midi.insert(0, guitar_part)
+                    full_midi.insert(0, bass_part)
+                    #full_midi.insert(0, drum_part)
+
+                    midi_path = f'LSTM_{self.instrument_name}_{j}.mid'
+
+                    full_midi.write('midi', fp=midi_path)
+                    midi_to_wav(midi_path, f'static/songs/LSTM_{self.instrument_name}_{j}.wav', False)
+
+                    self.save_song_to_db(f'LSTM_{self.instrument_name}_{j}.wav')
+                bug = False
+            except ValueError:
+                continue
 

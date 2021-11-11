@@ -1,4 +1,3 @@
-from DjangoApp.secretsconfig import LOCAL_ABSOLUTE_PATH
 from MLSongs.ml_agents.ml_model_base import MLModelBase
 from MLSongs.ml_agents.utilities import get_key_from_value,\
     combine_chords_with_durations, most_frequent
@@ -51,20 +50,18 @@ class LSTMModel(MLModelBase):
         return input
 
 
-    def predict(self, input, count, temp):
-        #startidx = np.random.randint(0, len(input) - 1)
-        #starting_slice = input[startidx]
+    def predict(self, input, count, temp, length=500):
         songs_in_db_cnt = len(get_songs_by_author(self.db_name))
         to_generate = count
 
         for j in range(songs_in_db_cnt, songs_in_db_cnt + to_generate):
 
-            generated_output = generate_notes(self.model, input, self.mapper, self.mapper_list, temp=temp)
+            generated_output = generate_notes(self.model, input, self.mapper, self.mapper_list, temp=temp, length=length)
 
             midi_path = f'LSTM_{self.instrument_name}_{j}.mid'
             create_midi_with_embedded_durations(generated_output, target_instrument=self.target_instrument, filename=midi_path)
 
             change_midi_instrument(midi_path, self.target_instrument)
-            midi_to_wav(midi_path, f'static/songs/LSTM_{self.instrument_name}_{j}.wav', True)
+            midi_to_wav(midi_path, f'static/songs/LSTM_{self.instrument_name}_{j}.wav', False)
 
             self.save_song_to_db(f'LSTM_{self.instrument_name}_{j}.wav')

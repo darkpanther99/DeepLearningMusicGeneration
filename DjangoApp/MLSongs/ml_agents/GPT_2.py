@@ -32,7 +32,6 @@ class Music_GPT_2(MLModelBase):
         return all_notes
 
     def predict(self, input, count):
-        #Ha a db-ben annyi gpt zene van, mint ahány a gpt-outputs folderben, akkor ne generáljon újat
         for idx, note_sequence in enumerate(input):
             midi_path = f'GPT-2_{self.instrument_name}_{idx}.mid'
             try:
@@ -40,7 +39,7 @@ class Music_GPT_2(MLModelBase):
                 create_midi_with_embedded_durations(note_sequence, filename=midi_path)
 
                 change_midi_instrument(midi_path, self.target_instrument)
-                midi_to_wav(midi_path, f'static/songs/GPT-2_{self.instrument_name}_{idx}.wav', True)
+                midi_to_wav(midi_path, f'static/songs/GPT-2_{self.instrument_name}_{idx}.wav', False)
 
                 self.save_song_to_db(f'GPT-2_{self.instrument_name}_{idx}.wav')
 
