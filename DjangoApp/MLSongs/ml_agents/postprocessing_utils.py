@@ -109,11 +109,14 @@ def generate_multi_instrument_notes(model, starting_slice, starting_duration, st
     return prediction_output, prediction_output_bass_ret, prediction_output_drum_ret
 
 
-def generate_notes(model, network_input, mapper, mapperlist = None, temp=1.0, length = 500, normalize = True):
+def generate_notes(model, network_input, mapper, mapperlist = None, temp=1.0, length = 500, normalize = True, random_start = True):
 
-    start = np.random.randint(0, len(network_input)-1)
+    if random_start:
+        start = np.random.randint(0, len(network_input)-1)
+        pattern = network_input[start]
+    else:
+        pattern = network_input
 
-    pattern = network_input[start]
     prediction_output = []
 
     for note_index in range(length):

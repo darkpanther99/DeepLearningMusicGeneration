@@ -10,6 +10,7 @@ from MLSongs.database.db_services import get_model, get_songs_by_author, get_all
 from MLSongs.ml_agents.MusicVAE import MusicVAE
 from MLSongs.ml_agents.Attention import AttentionModel
 from MLSongs.ml_agents.Transformer import TransformerModel
+from MLSongs.ml_agents.multi_instrument_transformer import MultiInstrumentTransformer
 
 
 def get_random_song(request):
@@ -60,6 +61,8 @@ def model_song(request, model, instrument):
             ML_model_name = "TransformerModel"
         elif "bass" in instrument.lower():
             ML_model_name = "TransformerModelBass"
+        elif "multi" in instrument.lower():
+            ML_model_name = 'TransformerMultiInstrumentModel'
 
     ml_author = get_model(ML_model_name)
     if not ml_author:
@@ -106,6 +109,10 @@ def execute_model(request, model, instrument, count, temp):
             t = threading.Thread(target=create_transformer, args=(count, instrument, temp))
             t.start()
             return HttpResponse("Transformer based model is working in the background!")
+        elif "multi" in instrument.lower():
+            t = threading.Thread(target=create_multi_transformer, args=(count, temp))
+            t.start()
+            return HttpResponse("Transformer based model is working in the background!")
 
     if "gpt" in model.lower():
         if "guitar" in instrument.lower():
@@ -121,12 +128,20 @@ def execute_model(request, model, instrument, count, temp):
 
     return HttpResponse("No model found with that name and instrument combination!")
 
+def create_multi_transformer(count, temp):
+    multi_transformer = MultiInstrumentTransformer()
+    data = multi_transformer.load_data()
+    multi_transformer.preprocess_data(data)
+    multi_transformer.build_model()
+    multi_transformer.predict(data, count, temp, 250)
+    print("Generation task has finished!")
+
 def create_transformer(count, instrument, temp):
     transformer = TransformerModel(instrument)
     data = transformer.load_data()
     data = transformer.preprocess_data(data)
     transformer.build_model()
-    transformer.predict(data, count, temp)
+    transformer.predict(data, count, temp, 250)
     print("Generation task has finished!")
 
 def create_attention(count, instrument, temp):
@@ -134,11 +149,11 @@ def create_attention(count, instrument, temp):
     data = att.load_data()
     data = att.preprocess_data(data)
     att.build_model()
-    att.predict(data, count, temp)
+    att.predict(data, count, temp, 250)
     print("Generation task has finished!")
 
-def create_vae(count, instrument_str, temp):
-    vae = MusicVAE(instrument_str)
+def create_vae(count, instrument, temp):
+    vae = MusicVAE(instrument)
     data = vae.load_data()
     data = vae.preprocess_data(data)
     vae.build_model()
@@ -160,12 +175,12 @@ def create_multi_lstm(count, temp):
     multi_lstm.predict(data, count, temp)
     print("Generation task has finished!")
 
-def create_markov(count, instrument_str):
-    mc = MarkovModel(instrument_str)
+def create_markov(count, instrument):
+    mc = MarkovModel(instrument)
     data = mc.load_data()
     chords, durations = mc.preprocess_data(data)
     mc.build_model(chords, durations)
-    mc.generate_music(chords, durations, count)
+    mc.generate_music(chords, durations, count, 250)
     print("Generation task has finished!")
 
 def create_LSTM(count, instrument, temp):
@@ -173,11 +188,19 @@ def create_LSTM(count, instrument, temp):
     data = lstm.load_data()
     data = lstm.preprocess_data(data)
     lstm.build_model()
-    lstm.predict(data, count, temp)
+    lstm.predict(data, count, temp, 250)
     print("Generation task has finished!")
 
 def debug(request):
-
+    temp = 0.9
+    count = 5
+    instruments = ['guitar', 'bass']
+    for instrument in instruments:
+        create_markov(count, instrument)
+        create_LSTM(count, instrument, temp)
+        create_vae(count, instrument, temp)
+        create_attention(count, instrument, temp)
+        create_transformer(count, instrument, temp)
     return HttpResponse('OK')
 
 def execute_model_once(request, model, instrument):
