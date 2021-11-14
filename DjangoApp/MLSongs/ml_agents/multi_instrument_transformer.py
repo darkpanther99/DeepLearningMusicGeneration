@@ -130,7 +130,7 @@ class MultiInstrumentTransformer(MLModelBase):
                     midi_path = f'Transformer_{self.instrument_name}_{j}.mid'
 
                     full_midi.write('midi', fp=midi_path)
-                    midi_to_wav(midi_path, f'static/songs/Transformer_{self.instrument_name}_{j}.wav', False)
+                    midi_to_wav(midi_path, f'static/songs/Transformer_{self.instrument_name}_{j}.wav', True)
 
                     self.save_song_to_db(f'Transformer_{self.instrument_name}_{j}.wav')
                 bug = False

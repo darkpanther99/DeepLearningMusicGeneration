@@ -137,7 +137,7 @@ class MultiInstrumentLSTM(MLModelBase):
                     midi_path = f'LSTM_{self.instrument_name}_{j}.mid'
 
                     full_midi.write('midi', fp=midi_path)
-                    midi_to_wav(midi_path, f'static/songs/LSTM_{self.instrument_name}_{j}.wav', False)
+                    midi_to_wav(midi_path, f'static/songs/LSTM_{self.instrument_name}_{j}.wav', True)
 
                     self.save_song_to_db(f'LSTM_{self.instrument_name}_{j}.wav')
                 bug = False
