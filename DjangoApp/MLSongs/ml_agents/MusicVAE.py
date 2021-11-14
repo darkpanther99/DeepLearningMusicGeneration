@@ -74,6 +74,6 @@ class MusicVAE(MLModelBase):
             create_midi_with_embedded_durations(predicted, target_instrument=self.target_instrument, filename=midi_path)
 
             change_midi_instrument(midi_path, self.target_instrument)
-            midi_to_wav(midi_path, f'static/songs/MusicVAE_{self.instrument_name}_{j}.wav', True)
+            midi_to_wav(midi_path, f'static/songs/MusicVAE_{self.instrument_name}_{j}.wav')
 
             self.save_song_to_db(f'MusicVAE_{self.instrument_name}_{j}.wav')

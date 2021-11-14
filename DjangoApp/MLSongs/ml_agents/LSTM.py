@@ -62,6 +62,6 @@ class LSTMModel(MLModelBase):
             create_midi_with_embedded_durations(generated_output, target_instrument=self.target_instrument, filename=midi_path)
 
             change_midi_instrument(midi_path, self.target_instrument)
-            midi_to_wav(midi_path, f'static/songs/LSTM_{self.instrument_name}_{j}.wav', True)
+            midi_to_wav(midi_path, f'static/songs/LSTM_{self.instrument_name}_{j}.wav')
 
             self.save_song_to_db(f'LSTM_{self.instrument_name}_{j}.wav')

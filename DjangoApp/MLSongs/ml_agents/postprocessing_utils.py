@@ -24,7 +24,7 @@ def change_midi_instrument(midi_path, new_instrument):
     s.write('midi', midi_path)
 
 
-def midi_to_wav(midi_path, wav_path, delete_midi = False):
+def midi_to_wav(midi_path, wav_path, delete_midi = True):
     fs = FluidSynth(sound_font=SOUNDFONT_PATH)
     fs.midi_to_audio(midi_path, wav_path)
     if delete_midi:
