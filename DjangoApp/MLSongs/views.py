@@ -84,7 +84,7 @@ def execute_model(request, model, instrument, count, temp):
 
     if "markov" in model.lower():
         if "guitar" in instrument.lower() or "bass" in instrument.lower():
-            t = threading.Thread(target=create_markov, args=(count, instrument, temp))
+            t = threading.Thread(target=create_markov, args=(count, instrument))
             t.start()
             return HttpResponse("Markov Model is working in the background!")
 
