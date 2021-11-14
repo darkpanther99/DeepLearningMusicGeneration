@@ -5,9 +5,8 @@ import pandas as pd
 from collections import Counter
 import math
 from music21.interval import Interval
-from music21.scale import ConcreteScale, MajorScale
+from music21.scale import MajorScale
 import numpy as np
-from scipy.stats import mode
 
 def convert_to_float(frac_str):
     # From: https://stackoverflow.com/questions/1806278/convert-fraction-to-float
@@ -31,12 +30,14 @@ def get_notes_from_pitch(chord):
         chord = chord[:-1]
     return chord
 
+
 def get_notes_from_note(chord):
     if chord.startswith("<music21.note.Note "):
         chord = chord[len("<music21.note.Note "):]
     if chord.endswith(">"):
         chord = chord[:-1]
     return chord
+
 
 def get_number_from_duration(duration):
     if duration.startswith("<music21.duration.Duration "):
@@ -45,6 +46,7 @@ def get_number_from_duration(duration):
         duration = duration[:-1]
     duration = duration.replace(" ", ",")
     return duration
+
 
 def extract_midis(path):
 
@@ -93,18 +95,6 @@ def extract_midis(path):
 
     return files, all_notes, all_rests, all_rest_durations, all_roots, all_note_offsets
 
-def get_max_intervals(pitches):
-    lengths = []
-    for pitch in pitches:
-        for pitch2 in pitches:
-            lengths.append(Interval(pitch, pitch2).semitones)
-
-    max_len = max(lengths)
-    abs_min = abs(min(lengths))
-    if abs_min > max_len:
-        max_len = abs_min
-
-    return max_len
 
 def get_direct_intervals(roots):
     direct_intervals = []
@@ -114,6 +104,7 @@ def get_direct_intervals(roots):
 
     return direct_intervals
 
+
 def get_duration_from_offset(offsets):
     durations = []
 
@@ -122,6 +113,7 @@ def get_duration_from_offset(offsets):
 
     return durations
 
+
 def add_dicts(source, target):
     for key, value in source.items():
         if key in target.keys():
@@ -129,20 +121,15 @@ def add_dicts(source, target):
         else:
             target[key] = value
 
+
 def get_music_df(path):
     files, pitches, rests, rest_durations, roots, note_offsets = extract_midis(path)
     all_music_data = []
 
     for i in tqdm(range(len(rest_durations))):
-        # elements = []
-        # for j in rest_durations[i]:
-        #    elements.append(convert_to_float(get_number_from_duration(str(j))))
 
         rest_durations_local = list(map(convert_to_float, map(get_number_from_duration, map(str, rest_durations[i]))))
         note_durations_local = list(map(convert_to_float, get_duration_from_offset(note_offsets[i])))
-
-        #max_interval = get_max_intervals(pitches[i])
-        max_interval = 0
 
         intervals_count = Counter(get_direct_intervals(roots[i]))
         intervals_count = dict(sorted(intervals_count.items(), key=lambda item: item[1], reverse=True)[0:5])
@@ -164,7 +151,6 @@ def get_music_df(path):
         unique_notes_str = list(set(notes_str))
         unique_notes_cnt = len(unique_notes_str)
 
-        # song_scale = ConcreteScale(pitches=unique_notes_str)
         major = MajorScale()
         scale_diff = major.deriveRanked(unique_notes_str)
         notes_in_scale = scale_diff[0][0]
@@ -174,12 +160,12 @@ def get_music_df(path):
         pitches_str = list(map(get_notes_from_pitch, pitches_str))
         unique_pitches = list(set(pitches_str))
 
-        music_data = (files[i], len(unique_pitches), unique_notes_cnt, notes_in_scale, notes_not_in_scale, max_interval,
+        music_data = (files[i], len(unique_pitches), unique_notes_cnt, notes_in_scale, notes_not_in_scale,
                 sum(rest_durations_local), max(rest_durations_local), intervals_count, durations_count)
         all_music_data.append(music_data)
 
 
-    return pd.DataFrame(data=all_music_data, columns=['track_and_instrument', 'unique_pitches', 'unique_notes', 'notes_in_scale', 'notes_not_in_scale', 'max_interval', 'sum_rests', 'longest_rest', 'intervals_count', 'durations_count'])
+    return pd.DataFrame(data=all_music_data, columns=['track_and_instrument', 'unique_pitches', 'unique_notes', 'notes_in_scale', 'notes_not_in_scale', 'sum_rests', 'longest_rest', 'intervals_count', 'durations_count'])
 
 
 def highest_sums(intervals):
@@ -191,7 +177,6 @@ def highest_sums(intervals):
             else:
                 final_count_dict[key] = value
     top_5_count = dict(sorted(final_count_dict.items(), key=lambda item: item[1], reverse=True)[0:5])
-    #print(final_count_dict)
     return list(top_5_count.keys())
 
 
@@ -220,7 +205,6 @@ def positionwise_mode(intervals):
                     new_dict[key] = value
         if i != 4:
             add_dicts(new_dict, counts[i + 1])
-    #print(counts)
     return maximums
 
 
@@ -255,7 +239,6 @@ def positionwise_sums(intervals):
                     new_dict[key] = value
         if i != 4:
             add_dicts(new_dict, counts[i + 1])
-    #print(counts)
     return maximums
 
 
@@ -282,5 +265,5 @@ def analyze_music(path, filter_outliers = False):
 
 
 if __name__ == '__main__':
-    print('\n', analyze_music(r"D:/Egyetem/6.felev/Önlab/MarkovOutputs", True).to_string())
-    print('\n', analyze_music(r"D:/MIDITest", True).to_string())
+    PATH = r'' #set this path accordingly
+    print('\n', analyze_music(PATH, True).to_string())
