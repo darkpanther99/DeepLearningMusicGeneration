@@ -1,16 +1,10 @@
 from django.http import HttpResponse
 from django.shortcuts import render
-from MLSongs.ml_agents.markov_chain import MarkovModel
-from MLSongs.ml_agents.LSTM import LSTMModel
-from MLSongs.ml_agents.GPT_2 import Music_GPT_2
 import random
 import threading
-from MLSongs.ml_agents.multi_instrument_LSTM import MultiInstrumentLSTM
 from MLSongs.database.db_services import get_model, get_songs_by_author, get_all_songs, create_empty_song
-from MLSongs.ml_agents.MusicVAE import MusicVAE
-from MLSongs.ml_agents.Attention import AttentionModel
-from MLSongs.ml_agents.Transformer import TransformerModel
-from MLSongs.ml_agents.multi_instrument_transformer import MultiInstrumentTransformer
+from MLSongs.ml_agents.execute_models import create_markov, create_LSTM, create_multi_lstm, create_attention,\
+    create_transformer, create_multi_transformer, create_gpt, create_vae
 
 
 def get_random_song(request):
@@ -25,6 +19,7 @@ def get_random_song(request):
         'path': chosen_song.path,
     }
     return render(request, 'song.html', variables)
+
 
 def model_song(request, model, instrument):
 
@@ -72,13 +67,13 @@ def model_song(request, model, instrument):
     except IndexError:
         return HttpResponse(f"No generated songs found for {ML_model_name}. Execute the model and generate some!")
 
-
     variables = {
         'title': chosen_song.title,
         'author': chosen_song.author,
         'path': chosen_song.path,
     }
     return render(request, 'song.html', variables)
+
 
 def execute_model(request, model, instrument, count, temp):
 
@@ -128,68 +123,6 @@ def execute_model(request, model, instrument, count, temp):
 
     return HttpResponse("No model found with that name and instrument combination!")
 
-def create_multi_transformer(count, temp):
-    multi_transformer = MultiInstrumentTransformer()
-    data = multi_transformer.load_data()
-    multi_transformer.preprocess_data(data)
-    multi_transformer.build_model()
-    multi_transformer.predict(data, count, temp, 250)
-    print("Generation task has finished!")
-
-def create_transformer(count, instrument, temp):
-    transformer = TransformerModel(instrument)
-    data = transformer.load_data()
-    data = transformer.preprocess_data(data)
-    transformer.build_model()
-    transformer.predict(data, count, temp, 250)
-    print("Generation task has finished!")
-
-def create_attention(count, instrument, temp):
-    att = AttentionModel(instrument)
-    data = att.load_data()
-    data = att.preprocess_data(data)
-    att.build_model()
-    att.predict(data, count, temp, 250)
-    print("Generation task has finished!")
-
-def create_vae(count, instrument, temp):
-    vae = MusicVAE(instrument)
-    data = vae.load_data()
-    data = vae.preprocess_data(data)
-    vae.build_model()
-    vae.predict(data, count, temp)
-    print("Generation task has finished!")
-
-def create_gpt():
-    gpt = Music_GPT_2()
-    data = gpt.load_data()
-    clean_data = gpt.preprocess_data(data)
-    gpt.predict(clean_data, -1)
-    print("Generation task has finished!")
-
-def create_multi_lstm(count, temp):
-    multi_lstm = MultiInstrumentLSTM()
-    data = multi_lstm.load_data()
-    guitar_input, durations_input, bass_input, drum_input = multi_lstm.preprocess_data(data)
-    multi_lstm.build_model()
-    multi_lstm.predict(data, count, temp)
-    print("Generation task has finished!")
-
-def create_markov(count, instrument):
-    mc = MarkovModel(instrument)
-    data = mc.load_data()
-    chords, durations = mc.preprocess_data(data)
-    mc.build_model(chords, durations)
-    mc.generate_music(chords, durations, count, 250)
-    print("Generation task has finished!")
-
-def create_LSTM(count, instrument, temp):
-    lstm = LSTMModel(instrument)
-    data = lstm.load_data()
-    data = lstm.preprocess_data(data)
-    lstm.build_model()
-    lstm.predict(data, count, temp, 250)
-    print("Generation task has finished!")
 
 def debug(request):
     temp = 0.9
@@ -203,14 +136,18 @@ def debug(request):
         create_transformer(count, instrument, temp)
     return HttpResponse('OK')
 
+
 def execute_model_once(request, model, instrument):
     return execute_model_without_temp(request, model, instrument, 1)
+
 
 def execute_model_without_temp(request, model, instrument, count):
     return execute_model(request, model, instrument, count, 0.8)
 
+
 def help(request):
     return render(request, 'help.html')
+
 
 def about(request):
     return render(request, 'about.html')
