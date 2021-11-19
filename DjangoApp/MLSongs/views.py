@@ -12,7 +12,7 @@ def get_random_song(request):
     try:
         chosen_song = random.choice(songs)
     except IndexError:
-        return HttpResponse(f"No generated songs found. Execute a model and generate some!")
+        return render(request, 'empty_song.html')
     variables = {
         'title': chosen_song.title,
         'author': chosen_song.author,
@@ -125,15 +125,6 @@ def execute_model(request, model, instrument, count, temp):
 
 
 def debug(request):
-    temp = 0.9
-    count = 5
-    instruments = ['guitar', 'bass']
-    for instrument in instruments:
-        create_markov(count, instrument)
-        create_LSTM(count, instrument, temp)
-        create_vae(count, instrument, temp)
-        create_attention(count, instrument, temp)
-        create_transformer(count, instrument, temp)
     return HttpResponse('OK')
 
 
