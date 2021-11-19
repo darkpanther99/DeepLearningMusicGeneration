@@ -18,7 +18,7 @@ In the MIDI and Waveform folders, I have jupyter notebooks with the model traini
 
 The project was tested on Python 3.8 and 3.9.  
 I haven't tried running it on earlier versions, and at the time I'm writing this, TensorFlow doesn't support Python 3.10.  
-1. Have FluidSynth on your computer added to PATH to be able to synthesize music from MIDIs into Waveforms.
+1. Have [FluidSynth](https://www.fluidsynth.org/) on your computer added to PATH to be able to synthesize music from MIDIs into Waveforms.
 2. Clone the repository.
 3. Install the required Python packages.
 ```
