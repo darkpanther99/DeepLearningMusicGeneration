@@ -3,7 +3,7 @@ librosa
 numpy
 matplotlib
 tqdm
-music21==6.7.1
+music21==8.1.0
 mchmm
 tensorflow==2.6.0
 keras==2.6.0
