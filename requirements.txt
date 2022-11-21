@@ -6,6 +6,6 @@ tqdm
 music21==6.7.1
 mchmm
 tensorflow==2.6.0
-keras==2.6.0
+keras==2.11.0
 midi2audio
 django
